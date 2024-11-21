@@ -4,24 +4,29 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
-class Alumno extends Model
+
+class Payment extends Model
 {
     use HasFactory;
 
-    protected $table = 'alumno';
-
     protected $fillable = [
         'user_id',
-        'nombre',
-        'apellido',
-        'pais',
-        'telefono',
-        'direccion',
+        'payment_id',
+        'provider',
+        'status',
+        'amount',
+        'currency',
+        'product_id',
+        'metadata'
+    ];
+
+    protected $casts = [
+        'metadata' => 'array',
+        'amount' => 'decimal:2'
     ];
 
     public function user()
     {
         return $this->belongsTo(User::class);
     }
-    
 }

@@ -35,4 +35,15 @@ return [
     //     ],
     // ],
 
+    'stripe' => [
+        'key' => env('STRIPE_KEY'),
+        'secret' => env('STRIPE_SECRET'),
+        'webhook_secret' => env('STRIPE_WEBHOOK_SECRET'),
+    ],
+
+    'uala' => [
+        'key' => env('UALA_KEY'),
+        'secret' => env('UALA_SECRET'),
+    ],
+
 ];

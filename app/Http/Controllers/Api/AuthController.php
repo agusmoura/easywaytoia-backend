@@ -1,112 +1,152 @@
 <?php
 
-namespace Tests\Feature;
+namespace App\Http\Controllers\Api;
 
-use Tests\TestCase;
-use App\Models\User;
+use App\Http\Controllers\Controller;
+use Illuminate\Support\Facades\Validator;
+use Illuminate\Validation\Rule;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Hash;
 use App\Models\Alumno;
-use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Auth;
+use App\Models\User;
 use Tymon\JWTAuth\Facades\JWTAuth;
+use Tymon\JWTAuth\Exceptions\JWTException;
+use App\Models\UserDevice;
 
-class AuthControllerTest extends TestCase
+class AuthController extends Controller
 {
-    use RefreshDatabase;
-
-    public function test_user_can_register(): void
+    public function register(Request $request)
     {
-        $userData = [
-            'username' => 'testuser',
-            'email' => 'test@example.com',
-            'password' => 'password123',
-            'password_confirmation' => 'password123',
-            'nombre' => 'Test',
-            'apellido' => 'User',
-            'pais' => 'España',
-            'telefono' => '123456789',
-            'direccion' => 'Test Address'
-        ];
+        try{
+            $validator = Validator::make($request->all(), [
+                'username' => ['required', 'string', 'max:255', Rule::unique('users')],
+                'email' => ['required', 'string', 'email', 'max:255', Rule::unique('users')],
+                'password' => ['required', 'string', 'min:6', 'confirmed'],
+                'nombre' => ['required', 'string', 'max:255'],
+                'apellido' => ['required', 'string', 'max:255'],
+                'pais' => ['required', 'string', 'max:255'],
+                'telefono' => ['required', 'string', 'max:255'],
+                'direccion' => ['required', 'string', 'max:255'],
+            ]);
 
-        $response = $this->postJson('/api/register', $userData);
+            if($validator->fails()){
+                throw new \Exception($validator->errors(), 422);
+            }
 
-        $response->assertStatus(201)
-                ->assertJsonStructure([
-                    'message',
-                    'token'
-                ]);
+            $user = User::create([
+                'username' => $request->username,
+                'email' => $request->email,
+                'password' => Hash::make($request->password),
+            ]);
 
-        $this->assertDatabaseHas('users', [
-            'username' => 'testuser',
-            'email' => 'test@example.com'
-        ]);
+            if(!$user){
+                throw new \Exception('Error al registrar el usuario');
+            }
 
-        $this->assertDatabaseHas('alumno', [
-            'nombre' => 'Test',
-            'apellido' => 'User'
-        ]);
+            Alumno::create([
+                'nombre' => $request->nombre,
+                'apellido' => $request->apellido,
+                'telefono' => $request->telefono,
+                'pais' => $request->pais,
+                'direccion' => $request->direccion,
+                'user_id' => $user->id,
+            ]);
+
+            $token = JWTAuth::fromUser($user);
+
+            return response()->json(
+                data: ['message' => 'Alumno registrado exitosamente', 'token' => $token],
+                status: 201
+            );
+        } catch (\Exception $e) {
+            $code = (int) $e->getCode() ?? 500;
+            $message = 'Error al registrar el alumno';
+            $error = $e->getMessage();
+            if(json_decode($error) && json_last_error() === JSON_ERROR_NONE){
+                $error = json_decode($error, true);
+            }
+            return response()->json(data: ['message' => $message, 'error' => $error], status: $code);
+        }
     }
 
-    public function test_user_can_login(): void
+    public function login(Request $request)
     {
-        $user = User::factory()->create([
-            'username' => 'testuser',
-            'email' => 'test@example.com',
-            'password' => bcrypt('password123')
-        ]);
+        try {
+            $credentials = $request->validate([
+                'password' => 'required|string',
+                'identifier' => 'required|string',
+                'device_id' => 'required|string'
+            ]);
 
-        Alumno::factory()->create([
-            'user_id' => $user->id
-        ]);
+            $loginField = filter_var($credentials['identifier'], FILTER_VALIDATE_EMAIL) ? 'email' : 'username';
 
-        $loginData = [
-            'identifier' => 'testuser',
-            'password' => 'password123',
-            'device_id' => 'test-device-123'
-        ];
+            $loginCredentials = [
+                $loginField => $credentials['identifier'],
+                'password' => $credentials['password']
+            ];
 
-        $response = $this->postJson('/api/login', $loginData);
+            if (!$token = JWTAuth::attempt($loginCredentials)) {
+                throw new \Exception('Credenciales invalidas', 401);
+            }
 
-        $response->assertStatus(200)
-                ->assertJsonStructure([
-                    'token',
-                    'type'
-                ]);
+            $user = auth()->user();
+            
+            $deviceCount = UserDevice::where('user_id', $user->id)->count();
+            if ($deviceCount >= 3) {
+                UserDevice::where('user_id', $user->id)
+                         ->orderBy('last_activity', 'asc')
+                         ->first()
+                         ->delete();
+            }
 
-        $this->assertDatabaseHas('user_devices', [
-            'user_id' => $user->id,
-            'device_id' => 'test-device-123'
-        ]);
+            UserDevice::updateOrCreate(
+                ['device_id' => $request->device_id],
+                [
+                    'user_id' => $user->id,
+                    'token' => $token,
+                    'ip_address' => $request->ip(),
+                    'user_agent' => $request->userAgent(),
+                    'last_activity' => now()
+                ]
+            );
+
+            return response()->json([
+                'token' => $token,
+                'type' => 'Bearer'
+            ], 200);
+
+        } catch (\Exception $e) {
+            Log::error($e->getMessage());
+            $code = (int) $e->getCode();
+            $statusCode = ($code >= 100 && $code <= 599) ? $code : 500;
+            $message = 'Error al iniciar sesión';
+            $error = $e->getMessage();
+            return response()->json(['message' => $message, 'error' => $error], $statusCode);
+        }
     }
 
-    public function test_user_can_logout(): void
+    public function logout(Request $request)
     {
-        $user = User::factory()->create();
-        $token = JWTAuth::fromUser($user);
+        try {
+            $deviceId = $request->header('Device-ID');
+            $user = auth()->user();
 
-        $deviceId = 'test-device-123';
-        $this->createUserDevice($user, $token, $deviceId);
+            // Eliminar el dispositivo
+            UserDevice::where('device_id', $deviceId)
+                     ->where('user_id', $user->id)
+                     ->delete();
 
-        $response = $this->withHeaders([
-            'Authorization' => 'Bearer ' . $token,
-            'Device-ID' => $deviceId
-        ])->postJson('/api/logout');
-
-        $response->assertStatus(200)
-                ->assertJson([
-                    'message' => 'Sesión cerrada exitosamente'
-                ]);
-
-        $this->assertDatabaseMissing('user_devices', [
-            'user_id' => $user->id,
-            'device_id' => $deviceId
-        ]);
+            JWTAuth::invalidate(JWTAuth::getToken());
+            return response()->json(['message' => 'Sesión cerrada exitosamente'], 200);
+        } catch (\Exception $e) {
+            return response()->json(['error' => 'Error al cerrar sesión'], 500);
+        }
     }
 
-    private function createUserDevice($user, $token, $deviceId): void
+    public function test(Request $request)
     {
-        $user->devices()->create([
-            'device_id' => $deviceId,
-            'token' => $token,
-            'last_activity' => now()
-        ]);
+        return response()->json(['message' => 'Token valido'], 200);
     }
 }

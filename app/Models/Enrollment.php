@@ -4,24 +4,29 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
-class Alumno extends Model
+
+class Enrollment extends Model
 {
     use HasFactory;
 
-    protected $table = 'alumno';
-
     protected $fillable = [
         'user_id',
-        'nombre',
-        'apellido',
-        'pais',
-        'telefono',
-        'direccion',
+        'course_id',
+        'payment_id'
     ];
 
     public function user()
     {
         return $this->belongsTo(User::class);
     }
-    
+
+    public function course()
+    {
+        return $this->belongsTo(Course::class);
+    }
+
+    public function payment()
+    {
+        return $this->belongsTo(Payment::class);
+    }
 }
