@@ -12,28 +12,12 @@ class CoursesSeeder extends Seeder
     {
         $courses = [
             [
-                'identifier' => 'test1',
-                'name' => 'Test 1',
-                'description' => 'este es un curso de prueba',
-                'slug' => 'test-1',
-                'is_active' => true,
-                'stripe_price_id' => 'price_1QNdrIJoZlIIgIOLnv32eiXD'
-            ],
-            [
-                'identifier' => 'iamf',
-                'name' => '¿La Inteligencia Artificial? ¡¡Pero si es muy fácil!!',
-                'description' => '',
-                'slug' => 'inteligencia-artificial-pero-si-es-muy-facil',
-                'is_active' => true,
-                'stripe_price_id' => 'price_iamf'
-            ],
-            [
                 'identifier' => 'selia',
                 'name' => 'Sumergiéndose en la I.A.',
                 'description' => '¿Que es la I.A? Las distintas plataformas de I.A- ChatGPT, Bing Copilot, Perplexity, Claude y POE',
                 'slug' => 'sumergiendo-en-la-ia',
                 'is_active' => true,
-                'stripe_price_id' => 'price_selia'
+                'stripe_price_id' => 'price_1QICn4GBpK56jnVeCcQ35fsX'
             ],
             [
                 'identifier' => 'belia',
@@ -41,7 +25,7 @@ class CoursesSeeder extends Seeder
                 'description' => 'Nueve modos de generar los prompts y cómo crear un bot, 150 prompts adicionales y 100 roles para la ChatGpt',
                 'slug' => 'buceando-en-la-ia',
                 'is_active' => true,
-                'stripe_price_id' => 'price_belia'
+                'stripe_price_id' => 'price_1QICptGBpK56jnVe5VaRQffz'
             ],
             [
                 'identifier' => 'rolia',
@@ -49,7 +33,7 @@ class CoursesSeeder extends Seeder
                 'description' => 'Generación de imágenes, videos y avatares, de sonido y speech, páginas web, creadoras de música y de libros, y editores de video.',
                 'slug' => 'una-recorrida-por-el-oceano-de-la-ia',
                 'is_active' => true,
-                'stripe_price_id' => 'price_rolia'
+                'stripe_price_id' => 'price_1QICsaGBpK56jnVePi5BjRAQ'
             ],
             [
                 'identifier' => 'selia>max',
@@ -57,7 +41,7 @@ class CoursesSeeder extends Seeder
                 'description' => 'Agregue el seminario Buceando en la I.A antes de terminar la compra.',
                 'slug' => 'maximizador-de-sumergiendose-en-la-ia',
                 'is_active' => true,
-                'stripe_price_id' => 'price_selia_max'
+                'stripe_price_id' => 'price_1QID6pGBpK56jnVefDftrqaQ'
             ],
             [
                 'identifier' => 'belia>mul',
@@ -65,7 +49,7 @@ class CoursesSeeder extends Seeder
                 'description' => 'Agregue el seminario Una recorrida por el océano de la I.A. antes de concluir su compra.',
                 'slug' => 'multiplicador-de-buceando-en-la-ia',
                 'is_active' => true,
-                'stripe_price_id' => 'price_belia_mul'
+                'stripe_price_id' => 'price_1QID87GBpK56jnVeLXs3sbqu'
             ],
         ];
 
@@ -75,14 +59,14 @@ class CoursesSeeder extends Seeder
                 'name' => 'Bundle 2x1',
                 'description' => 'Con la compra de Buceando en la I.A. adquiere también Sumergiéndose en la I.A.',
                 'is_active' => true,
-                'stripe_price_id' => 'price_bundle_2x1',
+                'stripe_price_id' => 'price_1QICwUGBpK56jnVeWy58IAY1',
             ],
             [
                 'identifier' => 'bndl_b_1_2_3',
                 'name' => 'Bundle 2 - los tres seminarios de introducción a la inteligencia artificial',
                 'description' => 'Adquiera los 3 seminarios, Sumergiéndose en la I.A., Buceando en la I.A y Una recorrida por el océano de la I.A. en un solo paquete a precio promocional!',
                 'is_active' => true,
-                'stripe_price_id' => 'price_bundle_123',
+                'stripe_price_id' => 'price_1QID02GBpK56jnVe5ZhsADnZ',
             ]
         ];
 
