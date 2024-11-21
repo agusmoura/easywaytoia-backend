@@ -14,6 +14,7 @@ use App\Models\User;
 use Tymon\JWTAuth\Facades\JWTAuth;
 use Tymon\JWTAuth\Exceptions\JWTException;
 use App\Models\UserDevice;
+use Illuminate\Support\Facades\URL;
 
 class AuthController extends Controller
 {
@@ -45,6 +46,19 @@ class AuthController extends Controller
                 throw new \Exception('Error al registrar el usuario');
             }
 
+            // Generar URL de verificación
+            $verificationUrl = URL::temporarySignedRoute(
+                'verification.verify',
+                now()->addMinutes(60),
+                [
+                    'id' => $user->getKey(),
+                    'hash' => sha1($user->getEmailForVerification()),
+                ]
+            );
+
+            // Enviar email de verificación
+            $user->sendEmailVerificationNotification();
+
             Alumno::create([
                 'nombre' => $request->nombre,
                 'apellido' => $request->apellido,
@@ -57,7 +71,7 @@ class AuthController extends Controller
             $token = JWTAuth::fromUser($user);
 
             return response()->json(
-                data: ['message' => 'Alumno registrado exitosamente', 'token' => $token],
+                data: ['message' => 'Alumno registrado exitosamente','verification_url' => $verificationUrl],
                 status: 201
             );
         } catch (\Exception $e) {

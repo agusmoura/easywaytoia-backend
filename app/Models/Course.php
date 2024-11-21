@@ -22,21 +22,6 @@ class Course extends Model
         'is_active' => 'boolean'
     ];
 
-    public function bundles()
-    {
-        return $this->belongsToMany(Bundle::class, 'bundle_course');
-    }
-
-    public function paymentLinks()
-    {
-        return $this->belongsToMany(PaymentLink::class, 'course_payment_link')
-                    ->withTimestamps();
-    }
-
-    public function coursePaymentLinks()
-    {
-        return $this->hasMany(CoursePaymentLink::class);
-    }
 
     public function enrollments()
     {

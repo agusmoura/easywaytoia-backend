@@ -19,6 +19,7 @@ return new class extends Migration
             $table->string('slug')->unique();
             $table->string('type')->default('curso');
             $table->boolean('is_active')->default(true);
+            $table->string('stripe_price_id')->nullable();
             $table->timestamps();
         });
 
@@ -29,23 +30,8 @@ return new class extends Migration
             $table->string('name');
             $table->text('description')->nullable();
             $table->boolean('is_active')->default(true);
-            $table->timestamps();
-        });
-
-        Schema::create('bundle_course', function (Blueprint $table) {
-            $table->id();
-            $table->foreignId('bundle_id')->constrained('bundles')->onDelete('cascade');
-            $table->foreignId('course_id')->constrained('courses')->onDelete('cascade');
-            $table->timestamps();
-
-            $table->unique(['bundle_id', 'course_id']);
-        });
-
-        Schema::create('course_payment_link', function (Blueprint $table) {
-            $table->id();
-            $table->foreignId('course_id')->nullable()->constrained('courses')->onDelete('cascade');
-            $table->foreignId('bundle_id')->nullable()->constrained('bundles')->onDelete('cascade');
-            $table->foreignId('payment_link_id')->constrained()->onDelete('cascade');
+            $table->string('stripe_price_id')->nullable();
+            $table->json('courses')->nullable();
             $table->timestamps();
         });
     }
@@ -55,9 +41,7 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('course_payment_link');
-        Schema::dropIfExists('bundle_course');
-        Schema::dropIfExists('bundles');
         Schema::dropIfExists('courses');
+        Schema::dropIfExists('bundles');
     }
 };

@@ -13,26 +13,20 @@ class Bundle extends Model
         'identifier',
         'name',
         'description',
-        'is_active'
+        'is_active',
+        'stripe_price_id',
+        'courses'
     ];
 
     protected $casts = [
-        'is_active' => 'boolean'
+        'is_active' => 'boolean',
+        'courses' => 'array'
     ];
 
-    public function courses()
+    public function setCourses(array $courseIdentifiers)
     {
-        return $this->belongsToMany(Course::class, 'bundle_course');
-    }
-
-    public function paymentLinks()
-    {
-        return $this->belongsToMany(PaymentLink::class, 'course_payment_link')
-                    ->withTimestamps();
-    }
-
-    public function coursePaymentLinks()
-    {
-        return $this->hasMany(CoursePaymentLink::class);
+        $this->courses = $courseIdentifiers;
+        $this->save();
     }
 } 
+

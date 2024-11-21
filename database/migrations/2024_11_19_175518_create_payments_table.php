@@ -21,20 +21,10 @@ return new class extends Migration
             $table->timestamps();
         });
 
-        Schema::create('payment_links', function (Blueprint $table) {
-            $table->id();
-            $table->string('identifier');
-            $table->string('link')->unique();
-            $table->string(column: 'provider')->default('stripe');
-            $table->boolean('is_active')->default(true);
-            $table->timestamps();
-        });
-
     }
 
     public function down(): void
     {
         Schema::dropIfExists('payments');
-        Schema::dropIfExists('payment_links');
     }
 };
