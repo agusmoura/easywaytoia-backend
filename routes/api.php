@@ -36,6 +36,8 @@ Route::group(['middleware' => [JwtMiddleware::class]], function () {
 });
 
 Route::post('/webhooks/stripe', [PaymentController::class, 'handleStripeWebhook']);
+Route::post('/webhooks/uala', [PaymentController::class, 'handleUalaWebhook']);
+
 Route::post('/email/verification-notification', [VerificationController::class, 'sendVerificationEmail']);
 Route::get('/email/verify/{id}/{hash}', [VerificationController::class, 'verify'])
     ->name('verification.verify')

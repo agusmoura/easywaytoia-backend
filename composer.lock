@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "854ab1a23abd827f9540204eb903deb3",
+    "content-hash": "0a6da7120d697635e04adaa062769702",
     "packages": [
         {
             "name": "brick/math",
@@ -5787,6 +5787,54 @@
                 }
             ],
             "time": "2024-03-14T19:29:49+00:00"
+        },
+        {
+            "name": "uala-bis/ualabis-php",
+            "version": "1.0.1",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/Uala-Developers/ualabis-php.git",
+                "reference": "59f071fbdb59726305360ab263e258cc07fb7f01"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/Uala-Developers/ualabis-php/zipball/59f071fbdb59726305360ab263e258cc07fb7f01",
+                "reference": "59f071fbdb59726305360ab263e258cc07fb7f01",
+                "shasum": ""
+            },
+            "require": {
+                "ext-curl": "*"
+            },
+            "require-dev": {
+                "mockery/mockery": "^1.5",
+                "phpunit/phpunit": "^9.5",
+                "squizlabs/php_codesniffer": "3.*"
+            },
+            "type": "library",
+            "autoload": {
+                "psr-4": {
+                    "Uala\\": "src/SDK"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "Ualá Bis",
+                    "email": "developers.ualabis@uala.com.ar",
+                    "homepage": "https://developers.ualabis.com.ar",
+                    "role": "Developer"
+                }
+            ],
+            "description": "Ualá Bis PHP SDK for API Checkout",
+            "support": {
+                "email": "developers.ualabis@uala.com.ar",
+                "issues": "https://github.com/Uala-Developers/ualabis-php/issues",
+                "source": "https://github.com/Uala-Developers/ualabis-php/tree/1.0.1"
+            },
+            "time": "2023-04-21T12:41:05+00:00"
         },
         {
             "name": "vlucas/phpdotenv",

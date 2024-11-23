@@ -42,8 +42,11 @@ return [
     ],
 
     'uala' => [
-        'key' => env('UALA_KEY'),
-        'secret' => env('UALA_SECRET'),
+        'url_token' => env('UALA_URL_TOKEN'),
+        'url_checkout' => env('UALA_URL_CHECKOUT'),
+        'username' => env('UALA_USERNAME'),
+        'client_id' => env('UALA_CLIENT_ID'),
+        'client_secret' => env('UALA_CLIENT_SECRET'),
     ],
 
 ];

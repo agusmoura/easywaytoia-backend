@@ -15,7 +15,8 @@ class Bundle extends Model
         'description',
         'is_active',
         'stripe_price_id',
-        'courses'
+        'courses',
+        'price'
     ];
 
     protected $casts = [

@@ -12,27 +12,20 @@ class CourseController extends Controller
 {
     public function store(Request $request)
     {
-
-      
-
-        $request->validate([
-            'identifier' => 'required|string|max:255',
-            'name' => 'required|string|max:255',
-            'description' => 'nullable|string',
-            'stripe_price_id' => 'required|string',
-            'is_active' => 'boolean'
-        ]);
-
         $validator = Validator::make($request->all(), [
             'identifier' => ['required', 'string', 'max:255', Rule::unique('courses')],
             'name' => ['required', 'string', 'max:255'],
             'description' => ['nullable', 'string'],
             'stripe_price_id' => ['required', 'string'],
             'is_active' => ['boolean'],
+            'price' => ['required', 'numeric', 'min:0']
         ]);
 
         if($validator->fails()){
-            throw new \Exception($validator->errors(), 422);
+            return response()->json([
+                'message' => 'Error de validación',
+                'errors' => $validator->errors()
+            ], 422);
         }
 
         try {
@@ -42,6 +35,7 @@ class CourseController extends Controller
                 'description' => $request->description,
                 'slug' => Str::slug($request->name),
                 'stripe_price_id' => $request->stripe_price_id,
+                'price' => $request->price,
                 'is_active' => $request->is_active ?? true
             ]);
 
@@ -60,23 +54,29 @@ class CourseController extends Controller
     public function update(Request $request, Course $course)
     {
         $validator = Validator::make($request->all(), [
-            'identifier' => ['string', 'max:255'],
+            'identifier' => ['string', 'max:255', Rule::unique('courses')->ignore($course->id)],
             'name' => ['string', 'max:255'],
             'description' => ['nullable', 'string'],
             'stripe_price_id' => ['string'],
             'is_active' => ['boolean'],
+            'price' => ['numeric', 'min:0']
         ]);
 
         if($validator->fails()){
-            throw new \Exception($validator->errors(), 422);
+            return response()->json([
+                'message' => 'Error de validación',
+                'errors' => $validator->errors()
+            ], 422);
         }
 
         try {
             $course->update($request->only([
+                'identifier',
                 'name',
                 'description',
                 'stripe_price_id',
-                'is_active'
+                'is_active',
+                'price'
             ]));
 
             if ($request->has('name')) {
@@ -99,16 +99,21 @@ class CourseController extends Controller
     public function updatePrice(Request $request, Course $course)
     {
         $validator = Validator::make($request->all(), [
-            'stripe_price_id' => ['required', 'string']
+            'stripe_price_id' => ['required', 'string'],
+            'price' => ['required', 'numeric', 'min:0']
         ]);
 
         if($validator->fails()){
-            throw new \Exception($validator->errors(), 422);
+            return response()->json([
+                'message' => 'Error de validación',
+                'errors' => $validator->errors()
+            ], 422);
         }
 
         try {
             $course->update([
-                'stripe_price_id' => $request->stripe_price_id
+                'stripe_price_id' => $request->stripe_price_id,
+                'price' => $request->price
             ]);
 
             return response()->json([

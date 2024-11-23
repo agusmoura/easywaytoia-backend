@@ -14,8 +14,9 @@ class Course extends Model
         'name',
         'description',
         'slug',
-        'type',
-        'is_active'
+        'stripe_price_id',
+        'is_active',
+        'price'
     ];
 
     protected $casts = [

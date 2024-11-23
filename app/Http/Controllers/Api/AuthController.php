@@ -33,7 +33,10 @@ class AuthController extends Controller
             ]);
 
             if($validator->fails()){
-                throw new \Exception($validator->errors(), 422);
+                return response()->json([
+                    'message' => 'Error de validación',
+                    'errors' => $validator->errors()
+                ], 422);
             }
 
             $user = User::create([
@@ -106,6 +109,12 @@ class AuthController extends Controller
             }
 
             $user = auth()->user();
+
+            if (!$user->email_verified_at) {
+                return response()->json([
+                    'error' => 'El usuario no es un alumno registrado, por favor verifique su email'
+                ], 401);
+            }
             
             $deviceCount = UserDevice::where('user_id', $user->id)->count();
             if ($deviceCount >= 3) {
