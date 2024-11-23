@@ -4,7 +4,7 @@ namespace Tests\Feature;
 
 use Tests\TestCase;
 use App\Models\User;
-use App\Models\Alumno;
+use App\Models\Student;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tymon\JWTAuth\Facades\JWTAuth;
 
@@ -52,7 +52,7 @@ class AuthControllerTest extends TestCase
             'password' => bcrypt('password123')
         ]);
 
-        Alumno::factory()->create([
+        Student::factory()->create([
             'user_id' => $user->id
         ]);
 
