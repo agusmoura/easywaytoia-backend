@@ -8,7 +8,7 @@ use App\Models\Course;
 use App\Models\Bundle;
 use App\Models\Payment;
 use App\Models\Enrollment;
-use App\Models\Alumno;
+use App\Models\Student;
 use Stripe\Stripe;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\Rule;
@@ -54,7 +54,7 @@ class PaymentController extends Controller
         }
 
         try {
-            $country = strtolower(Alumno::where('user_id', $user->id)->first()->pais);
+            $country = strtolower(Student::where('user_id', $user->id)->first()->country);
             if($country === 'argentina'){
                 return $this->createUalaPaymentLink($request);
             } else {

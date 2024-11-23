@@ -7,7 +7,7 @@ use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\Rule;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
-use App\Models\Alumno;
+use App\Models\Student;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Auth;
 use App\Models\User;
@@ -25,11 +25,11 @@ class AuthController extends Controller
                 'username' => ['required', 'string', 'max:255', Rule::unique('users')],
                 'email' => ['required', 'string', 'email', 'max:255', Rule::unique('users')],
                 'password' => ['required', 'string', 'min:6', 'confirmed'],
-                'nombre' => ['required', 'string', 'max:255'],
-                'apellido' => ['required', 'string', 'max:255'],
-                'pais' => ['required', 'string', 'max:255'],
-                'telefono' => ['required', 'string', 'max:255'],
-                'direccion' => ['required', 'string', 'max:255'],
+                'name' => ['required', 'string', 'max:255'],
+                'last_name' => ['required', 'string', 'max:255'],
+                'country' => ['required', 'string', 'max:255'],
+                'phone' => ['required', 'string', 'max:255'],
+                'address' => ['required', 'string', 'max:255'],
             ]);
 
             if($validator->fails()){
@@ -62,12 +62,12 @@ class AuthController extends Controller
             // Enviar email de verificación
             $user->sendEmailVerificationNotification();
 
-            Alumno::create([
-                'nombre' => $request->nombre,
-                'apellido' => $request->apellido,
-                'telefono' => $request->telefono,
-                'pais' => $request->pais,
-                'direccion' => $request->direccion,
+            Student::create([
+                'name' => $request->name,
+                'last_name' => $request->last_name,
+                'phone' => $request->phone,
+                'country' => $request->country,
+                'address' => $request->address,
                 'user_id' => $user->id,
             ]);
 

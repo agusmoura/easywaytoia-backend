@@ -4,19 +4,19 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
-class Alumno extends Model
+class Student extends Model
 {
     use HasFactory;
 
-    protected $table = 'alumno';
+    protected $table = 'student';
 
     protected $fillable = [
         'user_id',
-        'nombre',
-        'apellido',
-        'pais',
-        'telefono',
-        'direccion',
+        'name',
+        'last_name',
+        'country',
+        'phone',
+        'address',
     ];
 
     public function user()
