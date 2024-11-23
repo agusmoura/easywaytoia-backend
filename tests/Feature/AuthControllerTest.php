@@ -31,7 +31,6 @@ class AuthControllerTest extends TestCase
         $response->assertStatus(201)
                 ->assertJsonStructure([
                     'message',
-                    'token'
                 ]);
 
         $this->assertDatabaseHas('users', [

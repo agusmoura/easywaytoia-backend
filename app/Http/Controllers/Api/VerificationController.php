@@ -11,18 +11,25 @@ class VerificationController extends Controller
 {
     public function sendVerificationEmail(Request $request)
     {
+
+        if (!$request->user()) {
+            return response()->json([
+                'message' => 'Usuario no autenticado'
+            ], 401);
+        }
+
         if ($request->user()->hasVerifiedEmail()) {
             return response()->json([
                 'message' => 'El email ya está verificado'
             ], 200);
-        }
+        } 
 
         $verificationUrl = URL::temporarySignedRoute(
             'verification.verify',
             now()->addMinutes(60),
             [
                 'id' => $request->user()->getKey(),
-                'hash' => sha1($request->user()->getEmailForVerification()),
+                'hash' => sha1(string: $request->user()->getEmailForVerification()),
             ]
         );
 

@@ -3,80 +3,26 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
-use Illuminate\Support\Facades\Validator;
-use Illuminate\Validation\Rule;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Hash;
-use App\Models\Student;
-use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Facades\Auth;
 use App\Models\User;
-use Tymon\JWTAuth\Facades\JWTAuth;
-use Tymon\JWTAuth\Exceptions\JWTException;
-use App\Models\UserDevice;
-use Illuminate\Support\Facades\URL;
+use Illuminate\Support\Facades\Log;
 
 class AuthController extends Controller
 {
     public function register(Request $request)
     {
-        try{
-            $validator = Validator::make($request->all(), [
-                'username' => ['required', 'string', 'max:255', Rule::unique('users')],
-                'email' => ['required', 'string', 'email', 'max:255', Rule::unique('users')],
-                'password' => ['required', 'string', 'min:6', 'confirmed'],
-                'name' => ['required', 'string', 'max:255'],
-                'last_name' => ['required', 'string', 'max:255'],
-                'country' => ['required', 'string', 'max:255'],
-                'phone' => ['required', 'string', 'max:255'],
-                'address' => ['required', 'string', 'max:255'],
-            ]);
-
-            if($validator->fails()){
-                return response()->json([
-                    'message' => 'Error de validación',
-                    'errors' => $validator->errors()
-                ], 422);
-            }
-
-            $user = User::create([
-                'username' => $request->username,
-                'email' => $request->email,
-                'password' => Hash::make($request->password),
-            ]);
-
-            if(!$user){
-                throw new \Exception('Error al registrar el usuario');
-            }
-
-            // Generar URL de verificación
-            $verificationUrl = URL::temporarySignedRoute(
-                'verification.verify',
-                now()->addMinutes(60),
-                [
-                    'id' => $user->getKey(),
-                    'hash' => sha1($user->getEmailForVerification()),
-                ]
-            );
-
-            // Enviar email de verificación
-            $user->sendEmailVerificationNotification();
-
-            Student::create([
-                'name' => $request->name,
-                'last_name' => $request->last_name,
-                'phone' => $request->phone,
-                'country' => $request->country,
-                'address' => $request->address,
-                'user_id' => $user->id,
-            ]);
-
-            $token = JWTAuth::fromUser($user);
-
-            return response()->json(
-                data: ['message' => 'Alumno registrado exitosamente','verification_url' => $verificationUrl],
-                status: 201
-            );
+        try {
+            $result = User::registerUser($request->all());
+            
+            return response()->json([
+                'message' => 'Alumno registrado exitosamente',
+                'verification_url' => $result['verification_url']
+            ], 201);
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            return response()->json([
+                'message' => 'Error de validación',
+                'errors' => $e->errors()
+            ], 422);
         } catch (\Exception $e) {
             $code = (int) $e->getCode() ?? 500;
             $message = 'Error al registrar el alumno';
@@ -84,92 +30,42 @@ class AuthController extends Controller
             if(json_decode($error) && json_last_error() === JSON_ERROR_NONE){
                 $error = json_decode($error, true);
             }
-            return response()->json(data: ['message' => $message, 'error' => $error], status: $code);
+            return response()->json(['message' => $message, 'error' => $error], $code);
         }
     }
 
     public function login(Request $request)
     {
         try {
-            $credentials = $request->validate([
-                'password' => 'required|string',
-                'identifier' => 'required|string',
-                'device_id' => 'required|string'
-            ]);
-
-            $loginField = filter_var($credentials['identifier'], FILTER_VALIDATE_EMAIL) ? 'email' : 'username';
-
-            $loginCredentials = [
-                $loginField => $credentials['identifier'],
-                'password' => $credentials['password']
-            ];
-
-            if (!$token = JWTAuth::attempt($loginCredentials)) {
-                throw new \Exception('Credenciales invalidas', 401);
-            }
-
-            $user = auth()->user();
-
-            if (!$user->email_verified_at) {
-                return response()->json([
-                    'error' => 'El usuario no es un alumno registrado, por favor verifique su email'
-                ], 401);
-            }
+            $token = User::loginUser($request->all());
             
-            $deviceCount = UserDevice::where('user_id', $user->id)->count();
-            if ($deviceCount >= 3) {
-                UserDevice::where('user_id', $user->id)
-                         ->orderBy('last_activity', 'asc')
-                         ->first()
-                         ->delete();
-            }
-
-            UserDevice::updateOrCreate(
-                ['device_id' => $request->device_id],
-                [
-                    'user_id' => $user->id,
-                    'token' => $token,
-                    'ip_address' => $request->ip(),
-                    'user_agent' => $request->userAgent(),
-                    'last_activity' => now()
-                ]
-            );
-
             return response()->json([
                 'token' => $token,
                 'type' => 'Bearer'
             ], 200);
-
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            return response()->json([
+                'message' => 'Error de validación',
+                'errors' => $e->errors()
+            ], 422);
         } catch (\Exception $e) {
             Log::error($e->getMessage());
             $code = (int) $e->getCode();
             $statusCode = ($code >= 100 && $code <= 599) ? $code : 500;
-            $message = 'Error al iniciar sesión';
-            $error = $e->getMessage();
-            return response()->json(['message' => $message, 'error' => $error], $statusCode);
+            return response()->json([
+                'message' => 'Error al iniciar sesión',
+                'error' => $e->getMessage()
+            ], $statusCode);
         }
     }
 
     public function logout(Request $request)
     {
         try {
-            $deviceId = $request->header('Device-ID');
-            $user = auth()->user();
-
-            // Eliminar el dispositivo
-            UserDevice::where('device_id', $deviceId)
-                     ->where('user_id', $user->id)
-                     ->delete();
-
-            JWTAuth::invalidate(JWTAuth::getToken());
+            User::logoutUser($request->header('Device-ID'));
             return response()->json(['message' => 'Sesión cerrada exitosamente'], 200);
         } catch (\Exception $e) {
             return response()->json(['error' => 'Error al cerrar sesión'], 500);
         }
-    }
-
-    public function test(Request $request)
-    {
-        return response()->json(['message' => 'Token valido'], 200);
     }
 }
