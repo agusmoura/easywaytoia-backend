@@ -81,15 +81,6 @@ class User extends Authenticatable implements JWTSubject, MustVerifyEmail
             'address' => $data['address'],
         ]);
 
-        // Generate verification URL
-        // $verificationUrl = URL::temporarySignedRoute(
-        //     'verification.verify',
-        //     now()->addMinutes(60),
-        //     [
-        //         'id' => $user->getKey(),
-        //         'hash' => sha1($user->getEmailForVerification()),
-        //     ]
-        // );
 
         // Send verification email
         $user->sendEmailVerificationNotification();

@@ -24,7 +24,7 @@ class PaymentStripe
             'after_completion' => [
                 'type' => 'redirect',
                 'redirect' => [
-                    'url' => config('app.frontend_url') . '/success',
+                    'url' => config('app.frontend_url') . 'success',
                 ],
             ],
             'metadata' => [
