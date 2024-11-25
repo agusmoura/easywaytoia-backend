@@ -11,6 +11,7 @@ use App\Http\Controllers\Api\VerificationController;
 use App\Http\Controllers\Api\CourseController;
 use App\Http\Controllers\Api\BundleController;
 
+
 Route::post('/register', [AuthController::class, 'register']);
 Route::post('/login', [AuthController::class, 'login']);
 

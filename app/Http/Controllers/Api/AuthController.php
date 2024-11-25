@@ -15,8 +15,7 @@ class AuthController extends Controller
             $result = User::registerUser($request->all());
             
             return response()->json([
-                'message' => 'Alumno registrado exitosamente',
-                'verification_url' => $result['verification_url']
+                'message' => 'Usuario registrado exitosamente, se ha enviado un correo para verificar el email',
             ], 201);
         } catch (\Illuminate\Validation\ValidationException $e) {
             return response()->json([
