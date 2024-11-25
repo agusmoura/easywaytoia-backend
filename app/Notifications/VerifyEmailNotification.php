@@ -10,9 +10,12 @@ class VerifyEmailNotification extends VerifyEmail
     protected function buildMailMessage($url)
     {
         return (new MailMessage)
-            ->subject('Verificar dirección de email')
-            ->line('Por favor haz click en el botón para verificar tu dirección de email.')
+            ->subject('Bienvenido - Verifica tu dirección de email')
+            ->greeting('¡Bienvenido a nuestra plataforma!')
+            ->line('Estamos emocionados de que te hayas unido a nosotros.')
+            ->line('Para comenzar, necesitamos que verifiques tu dirección de email.')
             ->action('Verificar Email', $url)
-            ->line('Si no creaste una cuenta, puedes ignorar este email.');
+            ->line('Si no creaste una cuenta, puedes ignorar este email.')
+            ->salutation('¡Saludos!');
     }
 } 

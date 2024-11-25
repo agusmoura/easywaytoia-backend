@@ -1,0 +1,31 @@
+/* Colores personalizados */
+:root {
+    --primary: #2d3748;
+    --secondary: #718096;
+    --success: #48bb78;
+    --error: #f56565;
+}
+
+.button-primary {
+    background-color: var(--primary);
+}
+
+.button-success {
+    background-color: var(--success);
+}
+
+.button-error {
+    background-color: var(--error);
+}
+
+/* Personaliza otros estilos aquí */
+.header {
+    padding: 25px 0;
+    text-align: center;
+}
+
+.footer {
+    margin-top: 30px;
+    padding-top: 20px;
+    border-top: 1px solid #e8e5ef;
+}
