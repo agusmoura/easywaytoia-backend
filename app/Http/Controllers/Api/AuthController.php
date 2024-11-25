@@ -36,10 +36,11 @@ class AuthController extends Controller
     public function login(Request $request)
     {
         try {
-            $token = User::loginUser($request->all());
+            $result = User::loginUser($request->all());
             
             return response()->json([
-                'token' => $token,
+                'token' => $result['token'],
+                'device_id' => $result['device_id'],
                 'type' => 'Bearer'
             ], 200);
         } catch (\Illuminate\Validation\ValidationException $e) {

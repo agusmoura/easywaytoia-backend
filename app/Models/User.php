@@ -103,8 +103,7 @@ class User extends Authenticatable implements JWTSubject, MustVerifyEmail
     {
         $validator = Validator::make($credentials, [
             'password' => 'required|string',
-            'identifier' => 'required|string',
-            'device_id' => 'required|string'
+            'identifier' => 'required|string'
         ]);
 
         if ($validator->fails()) {
@@ -128,9 +127,13 @@ class User extends Authenticatable implements JWTSubject, MustVerifyEmail
             throw new \Exception('El usuario no es un alumno registrado, por favor verifique su email', 401);
         }
 
-        self::handleUserDevice($user, $credentials['device_id'], $token);
+        $deviceId = uniqid('dev_', true);
+        self::handleUserDevice($user, $deviceId, $token);
 
-        return $token;
+        return [
+            'token' => $token,
+            'device_id' => $deviceId
+        ];
     }
 
     public static function logoutUser(string $deviceId)
