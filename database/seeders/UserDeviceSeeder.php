@@ -16,9 +16,9 @@ class UserDeviceSeeder extends Seeder
     {
         /* crea un usuario con el rol de superadmin */
         User::create([
-            'username' => 'admin',
-            'email' => 'admin@example.com',
-            'password' => Hash::make('password'),
+            'username' => config('auth.admin.username'),
+            'email' => config('auth.admin.email'),
+            'password' => Hash::make(config('auth.admin.password')),
             'email_verified_at' => now(),
             'is_admin' => true,
         ]);

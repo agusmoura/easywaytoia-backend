@@ -18,6 +18,13 @@ return [
         'passwords' => env('AUTH_PASSWORD_BROKER', 'users'),
     ],
 
+
+    'admin' => [
+        'username' => env('ADMIN_USERNAME', 'admin'),
+        'email' => env('ADMIN_EMAIL', 'admin@easyway2ia.com'),
+        'password' => env('ADMIN_PASSWORD', 'admin'),
+    ],
+
     /*
     |--------------------------------------------------------------------------
     | Authentication Guards
