@@ -7,6 +7,7 @@ use App\Models\Payment;
 use App\Models\Enrollment;
 use App\Models\Bundle;
 use App\Models\Course;
+use Illuminate\Support\Facades\Log;
 
 class PaymentStripe
 {
@@ -24,11 +25,11 @@ class PaymentStripe
             'after_completion' => [
                 'type' => 'redirect',
                 'redirect' => [
-                    'url' => config('app.frontend_url') . 'success',
+                    'url' => $data['success_page'],
                 ],
             ],
             'metadata' => [
-                'user_id' => $user->id,
+                'user_id' => $user['id'],
                 'item_type' => $data['type'],
                 'item_id' => $item->id,
             ],

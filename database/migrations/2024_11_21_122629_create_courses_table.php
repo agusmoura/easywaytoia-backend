@@ -16,11 +16,11 @@ return new class extends Migration
             $table->string('identifier')->unique();
             $table->string('name');
             $table->text('description')->nullable();
-            $table->string('slug')->unique();
             $table->string('type')->default('curso');
             $table->boolean('is_active')->default(true);
             $table->decimal('price', 10, 2);
             $table->string('stripe_price_id')->nullable();
+            $table->string(column: 'success_page')->nullable();
             $table->timestamps();
         });
 
@@ -34,6 +34,7 @@ return new class extends Migration
             $table->decimal('price', 10, 2);
             $table->string('stripe_price_id')->nullable();
             $table->json('courses')->nullable();
+            $table->string(column: 'success_page')->nullable();
             $table->timestamps();
         });
     }

@@ -18,19 +18,19 @@ class PaymentUala
         $paymentUala->getUalaAccessToken();
 
         $item = self::getItem($data);
-        $external_reference = 'payment_' . uniqid() . '_' . $user->id;
+        $external_reference = 'payment_' . uniqid() . '_' . $user['id'];
 
         $paymentData = [
             'amount' => $item->price,
             'description' => "Pago por {$data['type']}: {$item->name}",
-            'callback_fail' => config('app.frontend_url') . '/failed',
-            'callback_success' => config('app.frontend_url') . '/success',
-            'notification_url' => config('app.frontend_url') . '/api/webhooks/uala',
+            'callback_fail' => config('app.prod_frontend_url') . '/failed',
+            'callback_success' => $data['success_page'],
+            'notification_url' => config('app.prod_url') . '/api/webhooks/uala',
             'external_reference' => $external_reference,
             'metadata' => [
-                'user_id' => $user->id,
+                'user_id' => $user['id'],
                 'item_type' => $data['type'],
-                'item_id' => $item->id
+                'item_id' => $item['id']
             ]
         ];
 
@@ -46,8 +46,10 @@ class PaymentUala
             throw new \Exception('Error al crear el link de pago en Ualá');
         }
 
+
+
         Payment::create([
-            'user_id' => $user->id,
+            'user_id' => $user['id'],
             'payment_id' => $external_reference,
             'provider' => 'uala',
             'status' => 'pending',
@@ -97,7 +99,8 @@ class PaymentUala
 
     private static function getItem($data)
     {
-        return ($data['type'] === 'course' ? Course::class : Bundle::class)::where('identifier', $data['identifier'])
+        $model = $data['type'] === 'course' ? Course::class : Bundle::class;
+        return $model::where('identifier', $data['identifier'])
             ->where('is_active', true)
             ->firstOrFail();
     }

@@ -124,4 +124,21 @@ class PaymentController extends Controller
             return response()->json(['error' => $e->getMessage()], 400);
         }
     }
+
+    public function checkout(Request $request)
+    {
+        try {
+            $result = Payment::checkout($request->all());
+            return response()->json($result, 200);
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            return response()->json([
+                'message' => 'Error de validación',
+                'errors' => $e->errors()
+            ], 422);
+        } catch (\Exception $e) {
+            return response()->json([
+                'error' => $e->getMessage()
+            ], $e->getCode() ?: 500);
+        }
+    }
 } 

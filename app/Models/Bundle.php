@@ -19,7 +19,8 @@ class Bundle extends Model
         'is_active',
         'stripe_price_id',
         'courses',
-        'price'
+        'price',
+        'success_page'
     ];
 
     protected $casts = [
@@ -37,7 +38,8 @@ class Bundle extends Model
             'courses' => ['required', 'array'],
             'courses.*' => ['string', 'exists:courses,identifier'],
             'is_active' => ['boolean'],
-            'price' => ['required', 'numeric', 'min:0']
+            'price' => ['required', 'numeric', 'min:0'],
+            'success_page' => ['nullable', 'string']
         ]);
 
         if ($validator->fails()) {
@@ -57,7 +59,8 @@ class Bundle extends Model
             'stripe_price_id' => $data['stripe_price_id'],
             'courses' => $data['courses'],
             'is_active' => $data['is_active'] ?? true,
-            'price' => $data['price']
+            'price' => $data['price'],
+            'success_page' => $data['success_page']
         ]);
     }
 
@@ -71,7 +74,8 @@ class Bundle extends Model
             'courses' => ['array'],
             'courses.*' => ['string', 'exists:courses,identifier'],
             'is_active' => ['boolean'],
-            'price' => ['numeric', 'min:0']
+            'price' => ['numeric', 'min:0'],
+            'success_page' => ['nullable', 'string']
         ]);
 
         if ($validator->fails()) {
@@ -86,7 +90,7 @@ class Bundle extends Model
     {
         $validator = Validator::make($data, [
             'stripe_price_id' => ['required', 'string'],
-            'price' => ['required', 'numeric', 'min:0']
+            'price' => ['required', 'numeric', 'min:0'],
         ]);
 
         if ($validator->fails()) {

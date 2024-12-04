@@ -16,10 +16,10 @@ class Course extends Model
         'identifier',
         'name',
         'description',
-        'slug',
         'stripe_price_id',
         'is_active',
-        'price'
+        'price',
+        'success_page'
     ];
 
     protected $casts = [
@@ -39,7 +39,8 @@ class Course extends Model
             'description' => ['nullable', 'string'],
             'stripe_price_id' => ['required', 'string'],
             'is_active' => ['boolean'],
-            'price' => ['required', 'numeric', 'min:0']
+            'price' => ['required', 'numeric', 'min:0'],
+            'success_page' => ['nullable', 'string']
         ]);
 
         if ($validator->fails()) {
@@ -50,9 +51,9 @@ class Course extends Model
             'identifier' => $data['identifier'],
             'name' => $data['name'],
             'description' => $data['description'],
-            'slug' => Str::slug($data['name']),
             'stripe_price_id' => $data['stripe_price_id'],
             'price' => $data['price'],
+            'success_page' => $data['success_page'],
             'is_active' => $data['is_active'] ?? true
         ]);
     }
@@ -65,7 +66,8 @@ class Course extends Model
             'description' => ['nullable', 'string'],
             'stripe_price_id' => ['string'],
             'is_active' => ['boolean'],
-            'price' => ['numeric', 'min:0']
+            'price' => ['numeric', 'min:0'],
+            'success_page' => ['nullable', 'string']
         ]);
 
         if ($validator->fails()) {

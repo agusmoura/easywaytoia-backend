@@ -53,6 +53,10 @@ return [
     */
 
     'url' => env('APP_URL', 'http://localhost'),
+    'frontend_url' => env('FRONTEND_URL', 'http://localhost:5500'),
+
+    'prod_url' => env('APP_PROD_URL', 'https://back.easyway2ia.com/public'),
+    'prod_frontend_url' => env('FRONTEND_PROD_URL', 'https://easyway2ia.com'),
 
     /*
     |--------------------------------------------------------------------------

@@ -6,6 +6,13 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Models\User;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Password;
+use Illuminate\Support\Facades\Hash;
+use App\Notifications\ResetPasswordNotification;
+use Illuminate\Support\Facades\Validator;
+use App\Models\Student;
+use App\Models\UserDevice;
+use Tymon\JWTAuth\Facades\JWTAuth;
 
 class AuthController extends Controller
 {
@@ -66,6 +73,60 @@ class AuthController extends Controller
             return response()->json(['message' => 'Sesión cerrada exitosamente'], 200);
         } catch (\Exception $e) {
             return response()->json(['error' => 'Error al cerrar sesión'], 500);
+        }
+    }
+
+    public function forgotPassword(Request $request)
+    {
+        try {
+            $result = User::forgotPassword($request->all());
+            return response()->json($result, 200);
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            return response()->json([
+                'message' => 'Error de validación',
+                'errors' => $e->errors()
+            ], 422);
+        } catch (\Exception $e) {
+            Log::error('Error en forgotPassword: ' . $e->getMessage());
+            return response()->json([
+                'message' => 'Error al procesar la solicitud',
+                'error' => $e->getMessage()
+            ], $e->getCode() ?: 500);
+        }
+    }
+
+    public function resetPassword(Request $request)
+    {
+        try {
+            $content = $request->getContent();
+            $data = json_decode($content, true);
+            $result = User::resetPassword($data);
+            return response()->json($result, 200);
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            return response()->json([
+                'message' => 'Error de validación',
+                'errors' => $e->errors()
+            ], 422);
+        } catch (\Exception $e) {
+            Log::error('Error en resetPassword: ' . $e->getMessage());
+            return response()->json([
+                'message' => 'Error al restablecer la contraseña',
+                'error' => $e->getMessage()
+            ], $e->getCode() ?: 500);
+        }
+    }
+
+    public function myAccount(Request $request)
+    {
+        try {
+            $result = User::getAccountInfo(auth()->id());
+            return response()->json($result, 200);
+        } catch (\Exception $e) {
+            Log::error('Error en myAccount: ' . $e->getMessage());
+            return response()->json([
+                'message' => 'Error al obtener la información de la cuenta',
+                'error' => $e->getMessage()
+            ], $e->getCode() ?: 500);
         }
     }
 }

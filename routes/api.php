@@ -14,11 +14,17 @@ use App\Http\Controllers\Api\BundleController;
 
 Route::post('/register', [AuthController::class, 'register']);
 Route::post('/login', [AuthController::class, 'login']);
+Route::post('/forgot-password', [AuthController::class, 'forgotPassword']);
+Route::post('/reset-password', [AuthController::class, 'resetPassword'])->name('password.reset');
+
+// Checkout endpoint (no auth required)
+Route::post('/checkout', [PaymentController::class, 'checkout']);
 
 // Rutas protegidas
 Route::group(['middleware' => [JwtMiddleware::class]], function () {
     Route::post('logout', [AuthController::class, 'logout']);
     Route::get('test', [AuthController::class, 'test']);
+    Route::get('/my-account', [AuthController::class, 'myAccount']);
     Route::get('/payments/create-link', [PaymentController::class, 'createPaymentLink']);
 
 
