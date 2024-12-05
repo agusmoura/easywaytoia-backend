@@ -15,6 +15,7 @@ use App\Models\UserDevice;
 use App\Models\Enrollment;
 use Tymon\JWTAuth\Facades\JWTAuth;
 use App\Notifications\ResetPasswordNotification;
+use App\Notifications\VerifyEmailNotification;
 use Illuminate\Support\Facades\Password;
 use Illuminate\Support\Facades\Log;
 class User extends Authenticatable implements JWTSubject, MustVerifyEmail
@@ -287,5 +288,10 @@ class User extends Authenticatable implements JWTSubject, MustVerifyEmail
     public function bundles()
     {
         return $this->student->bundles();
+    }
+
+    public function sendEmailVerificationNotification()
+    {
+        $this->notify(new VerifyEmailNotification);
     }
 }
