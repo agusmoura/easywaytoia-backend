@@ -85,20 +85,13 @@ class PaymentController extends Controller
     public function handleStripeWebhook(Request $request)
     {
         try {
-            $event = Webhook::constructEvent(
-                $request->getContent(),
+            PaymentStripe::handleWebhook($request->getContent(),
                 $request->header('Stripe-Signature'),
                 config('services.stripe.webhook_secret')
             );
 
-            if ($event->type === 'checkout.session.completed') {
-                $session = $event->data->object;
-                $payment = Payment::where('payment_id', $session->id)->first();
-                
-                if ($payment) {
-                    $this->handleSuccessfulPayment($payment);
-                }
-            }
+            Log::info('PaymentStripe::handleWebhook');
+            Log::info(json_encode($request->all()));
 
             return response()->json(['status' => 'success']);
         } catch (\Exception $e) {
@@ -110,14 +103,10 @@ class PaymentController extends Controller
     {
         try {
             // Validar firma del webhook de Ualá
-            
-            if ($request->input('status') === 'approved') {
-                $payment = Payment::where('payment_id', $request->input('order_id'))->first();
-                
-                if ($payment) {
-                    $this->handleSuccessfulPayment($payment);
-                }
-            }
+            PaymentUala::handleWebhook($request->all());
+
+            Log::info('PaymentUala::handleWebhook');
+            Log::info(json_encode($request->all()));
 
             return response()->json(['status' => 'success']);
         } catch (\Exception $e) {
