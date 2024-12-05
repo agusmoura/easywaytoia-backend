@@ -12,6 +12,7 @@ use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\URL;
 use App\Models\Student;
 use App\Models\UserDevice;
+use App\Models\Enrollment;
 use Tymon\JWTAuth\Facades\JWTAuth;
 use App\Notifications\ResetPasswordNotification;
 use Illuminate\Support\Facades\Password;
@@ -243,45 +244,22 @@ class User extends Authenticatable implements JWTSubject, MustVerifyEmail
         $student = Student::where('user_id', $user->id)->firstOrFail();
         
         // Generar URL del avatar
-        $name = urlencode($student->name . '+' . $student->last_name);
-        $avatarUrl = "https://ui-avatars.com/api/?name={$name}&size=128&bold=true&background=random";
+        $avatarName = urlencode($student->name . '+' . $student->last_name);
+        $avatarUrl = "https://ui-avatars.com/api/?name={$avatarName}&size=128&bold=true&background=random";
 
-        // Obtener cursos del estudiante
-        $courses = $student->courses()
-            ->withPivot(['created_at', 'payment_id'])
-            ->join('payments', 'enrollments.payment_id', '=', 'payments.id')
-            ->orderBy('enrollments.created_at', 'desc')
-            ->get()
-            ->map(function ($course) {
-                return [
-                    'type' => 'course',
-                    'name' => $course->name,
-                    'purchased_at' => $course->pivot->created_at->format('Y-m-d H:i:s'),
-                    'amount' => $course->amount ?? 0
-                ];
-            });
+        $enrollments = Enrollment::where('user_id', $user->id)->get();
 
-        // Obtener bundles del estudiante
-        $bundles = $student->bundles()
-            ->withPivot(['created_at', 'payment_id'])
-            ->join('payments', 'enrollments.payment_id', '=', 'payments.id')
-            ->orderBy('enrollments.created_at', 'desc')
-            ->get()
-            ->map(function ($bundle) {
-                return [
-                    'type' => 'bundle',
-                    'name' => $bundle->name,
-                    'purchased_at' => $bundle->pivot->created_at->format('Y-m-d H:i:s'),
-                    'amount' => $bundle->amount ?? 0
-                ];
-            });
-
-        // Combinar y ordenar por fecha de compra
-        $purchases = $courses->isEmpty() && $bundles->isEmpty() 
-            ? [] 
-            : $courses->concat($bundles)->sortByDesc('purchased_at')->values();
-
-        Log::info($purchases);
+        foreach ($enrollments as $enrollment) {
+            $payment = Payment::find($enrollment->payment_id);
+            $name = $enrollment->course_id ? Course::find($enrollment->course_id)->name : Bundle::find($enrollment->bundle_id)->name;
+            $purchases[] = [
+                'payment_id' => $payment->id,
+                'type' => $enrollment->course_id ? 'course' : 'bundle',
+                'name' => $name,
+                'purchased_at' => $payment->created_at->format('Y-m-d H:i:s'),
+                'amount' => $payment->amount
+            ];
+        }
 
         return [
             'user' => [
