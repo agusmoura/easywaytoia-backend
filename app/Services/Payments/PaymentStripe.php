@@ -60,6 +60,8 @@ class PaymentStripe
             ]);
 
             self::createEnrollments($session->metadata, $payment->id);
+        } else {
+            Log::error('PaymentStripe::handleWebhook - Evento no reconocido: ' . $event->type);
         }
 
         return true;

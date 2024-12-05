@@ -116,18 +116,4 @@ class AuthController extends Controller
             ], $e->getCode() ?: 500);
         }
     }
-
-    public function myAccount(Request $request)
-    {
-        try {
-            $result = User::getAccountInfo(auth()->id());
-            return response()->json($result, 200);
-        } catch (\Exception $e) {
-            Log::error('Error en myAccount: ' . $e->getMessage());
-            return response()->json([
-                'message' => 'Error al obtener la información de la cuenta',
-                'error' => $e->getMessage()
-            ], $e->getCode() ?: 500);
-        }
-    }
 }

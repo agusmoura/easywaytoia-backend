@@ -93,7 +93,7 @@ class PaymentController extends Controller
 
             if ($event->type === 'checkout.session.completed') {
                 $session = $event->data->object;
-                $payment = Payment::where('stripe_session_id', $session->id)->first();
+                $payment = Payment::where('payment_id', $session->id)->first();
                 
                 if ($payment) {
                     $this->handleSuccessfulPayment($payment);
@@ -112,7 +112,7 @@ class PaymentController extends Controller
             // Validar firma del webhook de Ualá
             
             if ($request->input('status') === 'approved') {
-                $payment = Payment::where('uala_order_id', $request->input('order_id'))->first();
+                $payment = Payment::where('payment_id', $request->input('order_id'))->first();
                 
                 if ($payment) {
                     $this->handleSuccessfulPayment($payment);
