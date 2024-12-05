@@ -53,7 +53,7 @@ class PaymentStripe
                 'payment_id' => $session->id,
                 'provider' => 'stripe',
                 'status' => 'completed',
-                'amount' => $session->amount_total,
+                'amount' => $session->amount_total / 100,
                 'currency' => $session->currency,
                 'product_id' => $session->payment_link,
                 'metadata' => json_encode($session)
