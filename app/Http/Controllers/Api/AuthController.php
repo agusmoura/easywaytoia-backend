@@ -48,6 +48,7 @@ class AuthController extends Controller
             return response()->json([
                 'token' => $result['token'],
                 'device_id' => $result['device_id'],
+                'userData' => $result['userData'],
                 'type' => 'Bearer'
             ], 200);
         } catch (\Illuminate\Validation\ValidationException $e) {

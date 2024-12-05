@@ -123,9 +123,12 @@ class User extends Authenticatable implements JWTSubject, MustVerifyEmail
         $deviceId = uniqid('dev_', true);
         self::handleUserDevice($user, $deviceId, $token);
 
+        $userData = User::getAccountInfo($user->id);
+
         return [
             'token' => $token,
-            'device_id' => $deviceId
+            'device_id' => $deviceId,
+            'userData' => $userData
         ];
     }
 
