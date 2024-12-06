@@ -69,10 +69,13 @@ class Payment extends Model
 
         $country = strtolower(Student::where('user_id', $user->id)->first()->country ?? 'default');
 
+        $success_page = $data['type'] === 'course' ? Course::where('identifier', $data['identifier'])->first()->success_page : Bundle::where('identifier', $data['identifier'])->first()->success_page;
+
         // Preparar datos para el pago
         $paymentData = [
             'type' => $data['type'],
             'identifier' => $data['identifier'],
+            'success_page' => $success_page
         ];
 
         if (isset($data['provider'])) {
