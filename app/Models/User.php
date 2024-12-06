@@ -266,6 +266,7 @@ class User extends Authenticatable implements JWTSubject, MustVerifyEmail
         return [
             'user' => [
                 'name' => $student->name,
+                'username' => $user->username,
                 'last_name' => $student->last_name,
                 'email' => $user->email,
                 'phone' => $student->phone,
