@@ -40,8 +40,8 @@ class Payment extends Model
     public static function createPaymentLink(array $data, $user)
     {
         $validator = Validator::make($data, [
-            'course_id' => 'required_without:bundle_id|exists:courses,id|nullable',
-            'bundle_id' => 'required_without:course_id|exists:bundles,id|nullable',
+            'identifier' => ['required', 'string'],
+            'type' => ['required', 'in:course,bundle'],
             'provider' => ['nullable', 'in:stripe,uala']
         ]);
 
@@ -55,10 +55,10 @@ class Payment extends Model
 
         // Verificar si ya existe una inscripción
         $query = Enrollment::where('user_id', $user->id);
-        if ($data['course_id']) {
-            $query->where('course_id', $data['course_id']);
-        } elseif ($data['bundle_id']) {
-            $query->where('bundle_id', $data['bundle_id']);
+        if ($data['type'] === 'course') {
+            $query->where('course_id', $data['identifier']);
+        } elseif ($data['type'] === 'bundle') {
+            $query->where('bundle_id', $data['identifier']);
         }
         
         $enrollment = $query->first();
@@ -71,8 +71,8 @@ class Payment extends Model
 
         // Preparar datos para el pago
         $paymentData = [
-            'type' => isset($data['course_id']) ? 'course' : 'bundle',
-            'identifier' => $data['course_id'] ?? $data['bundle_id'],
+            'type' => $data['type'],
+            'identifier' => $data['identifier'],
         ];
 
         if (isset($data['provider'])) {
@@ -85,14 +85,7 @@ class Payment extends Model
             ? PaymentUala::createPaymentLink($paymentData, $user)
             : PaymentStripe::createPaymentLink($paymentData, $user);
     }
-
-    public static function getPaymentLink($paymentData, $user)
-    {
-        return $paymentData['provider'] === 'uala'
-            ? PaymentUala::createPaymentLink($paymentData, $user)
-            : PaymentStripe::createPaymentLink($paymentData, $user);
-    }
-
+    
     public static function checkout(array $data)
     {
         // Validar datos de entrada
@@ -151,7 +144,10 @@ class Payment extends Model
             'success_page' => $success_page
         ];
 
-        $result = self::getPaymentLink($paymentData, $user);
+
+        $result = $paymentData['provider'] === 'uala'
+            ? PaymentUala::createPaymentLink($paymentData, $user)
+            : PaymentStripe::createPaymentLink($paymentData, $user);
 
         Log::info('User', $user);
 
