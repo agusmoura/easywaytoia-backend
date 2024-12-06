@@ -156,7 +156,7 @@ class Payment extends Model
 
         return [
             'message' => 'Checkout iniciado exitosamente',
-            'payment_url' => $result['payment_link'],
+            'payment_link' => $result['payment_link'],
             'user' => [
                 'username' => $user['username'],
                 'email' => $user['email'],

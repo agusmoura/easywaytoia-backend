@@ -116,4 +116,25 @@ class AuthController extends Controller
             ], $e->getCode() ?: 500);
         }
     }
+
+    public function getAccountInfo(Request $request)
+    {
+        try {
+
+            $user = auth()->user();
+            $result = User::getAccountInfo($user->id);
+            return response()->json($result, 200);
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            return response()->json([
+                'message' => 'Error al obtener la información de la cuenta',
+                'errors' => $e->errors()
+            ], 422);
+        } catch (\Exception $e) {
+            Log::error('Error en getAccountInfo: ' . $e->getMessage());
+            return response()->json([
+                'message' => 'Error al obtener la información de la cuenta',
+                'error' => $e->getMessage()
+            ], $e->getCode() ?: 500);
+        }
+    }
 }

@@ -26,6 +26,8 @@ Route::group(['middleware' => [JwtMiddleware::class]], function () {
     Route::get('test', [AuthController::class, 'test']);
     Route::post('/payments/create-link', [PaymentController::class, 'createPaymentLink']);
 
+    Route::post('/my-account', [AuthController::class, 'getAccountInfo']);
+
       // Rutas de superadmin
       Route::group(['middleware' => [AdminMiddleware::class]], function () {
         // Rutas de cursos
