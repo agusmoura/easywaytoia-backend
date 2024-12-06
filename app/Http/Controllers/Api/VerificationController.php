@@ -45,17 +45,17 @@ class VerificationController extends Controller
         $user = \App\Models\User::findOrFail($id);
 
         if (! hash_equals((string) $request->route('hash'), sha1($user->getEmailForVerification()))) {
-            return redirect(config('app.prod_frontend_url') . '/login?verification=invalid');
+            return redirect(config('app.prod_frontend_url') . '/pages/login?verification=invalid');
         }
 
         if ($user->hasVerifiedEmail()) {
-            return redirect(config('app.prod_frontend_url') . '/login?verification=already');
+            return redirect(config('app.prod_frontend_url') . '/pages/login?verification=already');
         }
 
         if ($user->markEmailAsVerified()) {
             event(new Verified($user));
         }
 
-        return redirect(config('app.prod_frontend_url') . '/login?verification=success');
+        return redirect(config('app.prod_frontend_url') . '/pages/login?verification=success');
     }
 } 
