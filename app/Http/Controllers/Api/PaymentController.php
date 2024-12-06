@@ -65,22 +65,7 @@ class PaymentController extends Controller
         ]);
     }
 
-    public function createPaymentLink(Request $request)
-    {
-        try {
-            $result = Payment::createPaymentLink($request->all(), auth()->user());
-            return response()->json($result, 200);
-        } catch (\Illuminate\Validation\ValidationException $e) {
-            return response()->json([
-                'message' => 'Error de validación',
-                'errors' => $e->errors()
-            ], 422);
-        } catch (\Exception $e) {
-            return response()->json([
-                'error' => $e->getMessage()
-            ], $e->getCode() ?: 500);
-        }
-    }
+  
 
     public function handleStripeWebhook(Request $request)
     {
@@ -118,6 +103,23 @@ class PaymentController extends Controller
     {
         try {
             $result = Payment::checkout($request->all());
+            return response()->json($result, 200);
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            return response()->json([
+                'message' => 'Error de validación',
+                'errors' => $e->errors()
+            ], 422);
+        } catch (\Exception $e) {
+            return response()->json([
+                'error' => $e->getMessage()
+            ], $e->getCode() ?: 500);
+        }
+    }
+
+    public function createPaymentLink(Request $request)
+    {
+        try {
+            $result = Payment::createPaymentLink($request->all(), auth()->user());
             return response()->json($result, 200);
         } catch (\Illuminate\Validation\ValidationException $e) {
             return response()->json([

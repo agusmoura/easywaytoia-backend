@@ -67,9 +67,26 @@ class Payment extends Model
             throw new \Exception('El usuario ya tiene una inscripción activa a este seminario o bundle', 401);
         }
 
+        /* verificar que exista el curso o bundle */
+        if ( $data['type'] === 'course' && isset($data['identifier'])) {
+            $course = Course::where('identifier', $data['identifier'])->first();
+            if (!$course) {
+                throw new \Exception('El curso no existe', 404);
+            }
+        }
+
+        if ($data['type'] === 'bundle' && isset($data['identifier'])) {
+            $bundle = Bundle::where('identifier', $data['identifier'])->first();
+            if (!$bundle) {
+                throw new \Exception('El bundle no existe', 404);
+            }
+        }
+
+
         $country = strtolower(Student::where('user_id', $user->id)->first()->country ?? 'default');
 
         $success_page = $data['type'] === 'course' ? Course::where('identifier', $data['identifier'])->first()->success_page : Bundle::where('identifier', $data['identifier'])->first()->success_page;
+
 
         // Preparar datos para el pago
         $paymentData = [
@@ -139,6 +156,7 @@ class Payment extends Model
         // Generar link de pago
 
         $success_page = $data['course_identifier'] ? Course::where('identifier', $data['course_identifier'])->first()->success_page : Bundle::where('identifier', $data['bundle_identifier'])->first()->success_page;
+
 
         $paymentData = [
             'provider' => $data['provider'] ?? null,
