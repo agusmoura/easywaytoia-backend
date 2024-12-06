@@ -253,10 +253,21 @@ class User extends Authenticatable implements JWTSubject, MustVerifyEmail
         $purchases = [];
         foreach ($enrollments as $enrollment) {
             $payment = Payment::find($enrollment->payment_id);
-            $name = $enrollment->course_id ? Course::find($enrollment->course_id)->name : Bundle::find($enrollment->bundle_id)->name;
+            
+            if ($enrollment->course_id) {
+                $course = Course::find($enrollment->course_id);
+                $name = $course->name;
+                $identifier = $course->identifier;
+            } else {
+                $bundle = Bundle::find($enrollment->bundle_id);
+                $name = $bundle->name;
+                $identifier = $bundle->identifier; 
+            }
+
             $purchases[] = [
                 'payment_id' => $payment->id,
                 'type' => $enrollment->course_id ? 'course' : 'bundle',
+                'identifier' => $identifier,
                 'name' => $name,
                 'purchased_at' => $payment->created_at->format('Y-m-d H:i:s'),
                 'amount' => $payment->amount
