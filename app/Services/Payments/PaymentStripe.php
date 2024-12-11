@@ -51,10 +51,6 @@ class PaymentStripe
             return response()->json(['error' => 'Invalid signature'], 400);
         }
         
-        Log::info('Event:', ['event' => $event]);
-        Log::info('Event type:', ['event_type' => $event->type]);
-        Log::info('Event data:', ['event_data' => $event->data]);
-
         switch ($event['type']) {
             case 'payment_intent.succeeded':
                 self::handlePaymentIntentCreated($event['data']['object']);
@@ -81,9 +77,8 @@ class PaymentStripe
     private static function handleCheckoutSessionCompleted($session)
     {
         $metadata = $session->metadata;
-
-        Log::info('Metadata:', ['metadata' => $metadata]);
-        
+        Log::info('session:', ['session' => $session]);
+    
         $payment = Payment::create([
             'user_id' => $metadata->user_id,
             'payment_id' => $session->id,
@@ -112,13 +107,10 @@ class PaymentStripe
     private static function createEnrollments($metadata, $paymentId)
     {
         Log::info('PaymentStripe::createEnrollments - Start');
-        Log::info('Metadata:', ['metadata' => $metadata]);
-        Log::info('Payment ID:', ['payment_id' => $paymentId]);
-     
 
-        $itemType = $metadata->Stripe->StripeObject->item_type;
-        $itemId = $metadata->Stripe->StripeObject->item_id;
-        $userId = $metadata->Stripe->StripeObject->user_id;
+        $itemType = $metadata->{'Stripe\\StripeObject'}->item_type;
+        $itemId = $metadata->{'Stripe\\StripeObject'}->item_id;
+        $userId = $metadata->{'Stripe\\StripeObject'}->user_id;
 
         Log::info('Item type:', ['item_type' => $itemType]);
         Log::info('Item ID:', ['item_id' => $itemId]);
