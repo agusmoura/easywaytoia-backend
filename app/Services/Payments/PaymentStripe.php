@@ -50,43 +50,7 @@ class PaymentStripe
       
         
         try {
-            if ($event->type === 'checkout.session.completed') {
-                $session = $event->data->object;
-                
-                // Get metadata from the payment link
-                try {
-                    $paymentLink = \Stripe\PaymentLink::retrieve($session->payment_link);
-                    $metadata = $paymentLink->metadata;
-                } catch (\Exception $e) {
-                    Log::error('Failed to retrieve payment link metadata', [
-                        'payment_link' => $session->payment_link,
-                        'error' => $e->getMessage()
-                    ]);
-                    $metadata = $session->metadata;
-                }
-                
-                if (empty($metadata) || empty($metadata->user_id)) {
-                    Log::error('Missing user_id in metadata', [
-                        'session_id' => $session->id,
-                        'metadata' => $metadata
-                    ]);
-                    return true;
-                }
-
-                $payment = Payment::create([
-                    'user_id' => $metadata->user_id,
-                    'payment_id' => $session->id,
-                    'provider' => 'stripe',
-                    'status' => 'completed',
-                    'amount' => $session->amount_total / 100,
-                    'currency' => $session->currency,
-                    'product_id' => $session->payment_link,
-                    'metadata' => json_encode($metadata)
-                ]);
-
-                self::createEnrollments($metadata, $payment->id);
-            } 
-            else if ($event->type === 'payment_intent.succeeded') {
+            if ($event->type === 'payment_intent.succeeded') {
                 $paymentIntent = $event->data->object;
                 
                 // Try to find payment by payment intent ID
