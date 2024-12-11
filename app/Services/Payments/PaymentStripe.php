@@ -47,7 +47,7 @@ class PaymentStripe
         $event = \Stripe\Webhook::constructEvent(
             $payload, $sigHeader, $endpointSecret
         );
-        Log::info('Event type:', ['type' => $event->type]);
+      
         
         try {
             if ($event->type === 'checkout.session.completed') {
@@ -123,7 +123,6 @@ class PaymentStripe
                 }
             }
 
-            Log::info('PaymentStripe::handleWebhook - Success');
             return true;
         } catch (\Exception $e) {
             Log::error('PaymentStripe::handleWebhook - Error', [
@@ -143,6 +142,10 @@ class PaymentStripe
 
     private static function createEnrollments($metadata, $paymentId)
     {
+        Log::info('PaymentStripe::createEnrollments - Start');
+        Log::info('Metadata:', ['metadata' => $metadata]);
+        Log::info('Payment ID:', ['payment_id' => $paymentId]);
+        
         if ($metadata->item_type === 'course') {
             Enrollment::create([
                 'user_id' => $metadata->user_id,
