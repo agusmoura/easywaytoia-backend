@@ -41,55 +41,81 @@ class PaymentStripe
 
     public static function handleWebhook($payload, $sigHeader, $endpointSecret)
     {
-        Log::info('PaymentStripe::handleWebhook');
-        Log::info(json_encode($payload));
+        Log::info('PaymentStripe::handleWebhook - Start');
+        Log::info('Event payload:', ['payload' => $payload]);
+        
         $event = \Stripe\Webhook::constructEvent(
             $payload, $sigHeader, $endpointSecret
         );
-        Log::info($event->type);
-        Log::info("----------------");
         
-        if ($event->type === 'checkout.session.completed') {
-            $session = $event->data->object;
-            
-            $payment = Payment::create([
-                'user_id' => $session->metadata->user_id,
-                'payment_id' => $session->id,
-                'provider' => 'stripe',
-                'status' => 'completed',
-                'amount' => $session->amount_total / 100,
-                'currency' => $session->currency,
-                'product_id' => $session->payment_link,
-                'metadata' => json_encode($session)
-            ]);
+        Log::info('Event type:', ['type' => $event->type]);
+        
+        try {
+            if ($event->type === 'checkout.session.completed') {
+                $session = $event->data->object;
+                
+                $payment = Payment::create([
+                    'user_id' => $session->metadata->user_id,
+                    'payment_id' => $session->id,
+                    'provider' => 'stripe',
+                    'status' => 'completed',
+                    'amount' => $session->amount_total / 100,
+                    'currency' => $session->currency,
+                    'product_id' => $session->payment_link,
+                    'metadata' => json_encode($session)
+                ]);
 
-            self::createEnrollments($session->metadata, $payment->id);
-        } 
-        
-        else if ($event->type === 'payment_link.created') {
-            $paymentLink = $event->data->object;
-            $payment = Payment::create([
-                'user_id' => $paymentLink->metadata->user_id,
-                'payment_id' => $paymentLink->id,
-                'provider' => 'stripe',
-                'status' => 'pending',
-                'amount' => $paymentLink->amount_total / 100,
-                'currency' => $paymentLink->currency,
-                'product_id' => $paymentLink->id,
-                'metadata' => json_encode($paymentLink)
+                self::createEnrollments($session->metadata, $payment->id);
+            } 
+            else if ($event->type === 'payment_intent.created') {
+                $paymentLink = $event->data->object;
+                $payment = Payment::create([
+                    'user_id' => $paymentLink->metadata->user_id,
+                    'payment_id' => $paymentLink->id,
+                    'provider' => 'stripe',
+                    'status' => 'pending',
+                    'amount' => $paymentLink->amount_total / 100,
+                    'currency' => $paymentLink->currency,
+                    'product_id' => $paymentLink->id,
+                    'metadata' => json_encode($paymentLink)
+                ]);
+            } 
+            else if ($event->type === 'payment_intent.succeeded') {
+                $paymentIntent = $event->data->object;
+                $payment = Payment::where('payment_id', $paymentIntent->id)->first();
+                
+                if (!$payment) {
+                    Log::error('Payment not found for payment_intent: ' . $paymentIntent->id);
+                    // Create payment record if it doesn't exist
+                    $payment = Payment::create([
+                        'user_id' => $paymentIntent->metadata->user_id,
+                        'payment_id' => $paymentIntent->id,
+                        'provider' => 'stripe',
+                        'status' => 'completed',
+                        'amount' => $paymentIntent->amount / 100,
+                        'currency' => $paymentIntent->currency,
+                        'product_id' => $paymentIntent->id,
+                        'metadata' => json_encode($paymentIntent->metadata)
+                    ]);
+                } else {
+                    $payment->update(['status' => 'completed']);
+                }
+                
+                self::createEnrollments($paymentIntent->metadata, $payment->id);
+            } 
+            else {
+                Log::error('PaymentStripe::handleWebhook - Evento no reconocido: ' . $event->type);
+            }
+
+            Log::info('PaymentStripe::handleWebhook - Success');
+            return true;
+        } catch (\Exception $e) {
+            Log::error('PaymentStripe::handleWebhook - Error', [
+                'message' => $e->getMessage(),
+                'event_type' => $event->type
             ]);
-        } 
-        else if ($event->type === 'payment_intent.succeeded') {
-            $paymentIntent = $event->data->object;
-            $payment = Payment::where('payment_id', $paymentIntent->id)->first();
-            $payment->update(['status' => 'completed']);
-            self::createEnrollments($paymentIntent->metadata, $payment->id);
-        } 
-        else {
-            Log::error('PaymentStripe::handleWebhook - Evento no reconocido: ' . $event->type);
+            throw $e;
         }
-
-        return true;
     }
 
     private static function getItem($data)
