@@ -74,10 +74,6 @@ class PaymentController extends Controller
                 $request->header('Stripe-Signature'),
                 config('services.stripe.webhook_secret')
             );
-
-            Log::info('PaymentStripe::handleWebhook');
-            Log::info(json_encode($request->all()));
-
             return response()->json(['status' => 'success']);
         } catch (\Exception $e) {
             return response()->json(['error' => $e->getMessage()], 400);

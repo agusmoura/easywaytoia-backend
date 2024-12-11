@@ -41,10 +41,14 @@ class PaymentStripe
 
     public static function handleWebhook($payload, $sigHeader, $endpointSecret)
     {
+        Log::info('PaymentStripe::handleWebhook');
+        Log::info(json_encode($payload));
         $event = \Stripe\Webhook::constructEvent(
             $payload, $sigHeader, $endpointSecret
         );
-
+        Log::info($event->type);
+        Log::info("----------------");
+        
         if ($event->type === 'checkout.session.completed') {
             $session = $event->data->object;
             
