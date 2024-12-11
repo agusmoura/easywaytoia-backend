@@ -58,8 +58,8 @@ class PaymentStripe
             case 'checkout.session.completed':
                 self::handleCheckoutSessionCompleted($event['data']['object']);
                 break;
+            case 'payment_link.created':
             case 'payment_intent.created':
-                self::handlePaymentIntentCreated($event['data']['object']);
                 break;
             default:
                 Log::info('Unhandled event type:', ['event_type' => $event->type]);
@@ -76,20 +76,20 @@ class PaymentStripe
 
     private static function handleCheckoutSessionCompleted($session)
     {
-        $metadata = $session->metadata;
         Log::info('session:', ['session' => $session]);
-    
+        
         $payment = Payment::create([
-            'user_id' => $metadata->user_id,
+            'user_id' => $session->metadata->user_id,
             'payment_id' => $session->id,
             'provider' => 'stripe',
             'status' => 'completed',
-            'amount' => $session->amount / 100,
+            'amount' => $session->amount_total / 100,
             'currency' => $session->currency,
             'product_id' => $session->id,
-            'metadata' => json_encode($metadata)
+            'metadata' => json_encode($session->metadata)
         ]);
-        self::createEnrollments($metadata, $payment->id);
+
+        self::createEnrollments($session->metadata, $payment->id);
     }
 
     private static function handlePaymentIntentCreated($paymentIntent)
@@ -108,15 +108,14 @@ class PaymentStripe
     {
         Log::info('PaymentStripe::createEnrollments - Start');
 
-        $itemType = $metadata->{'Stripe\\StripeObject'}->item_type;
-        $itemId = $metadata->{'Stripe\\StripeObject'}->item_id;
-        $userId = $metadata->{'Stripe\\StripeObject'}->user_id;
+        $itemType = $metadata->item_type;
+        $itemId = $metadata->item_id;
+        $userId = $metadata->user_id;
 
         Log::info('Item type:', ['item_type' => $itemType]);
         Log::info('Item ID:', ['item_id' => $itemId]);
         Log::info('User ID:', ['user_id' => $userId]);
         
-        // if ($metadata->item_type === 'course') {
         if ($itemType === 'course') {
             Enrollment::create([
                 'user_id' => $userId,
