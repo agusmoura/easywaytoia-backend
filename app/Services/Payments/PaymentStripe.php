@@ -41,66 +41,65 @@ class PaymentStripe
 
     public static function handleWebhook($payload, $sigHeader, $endpointSecret)
     {
-        // Set Stripe API key first
         Stripe::setApiKey(config('services.stripe.secret'));
 
-        $event = \Stripe\Webhook::constructEvent(
-            $payload, $sigHeader, $endpointSecret
-        );
-
+        try {
+            $event = \Stripe\Webhook::constructEvent($payload, $sigHeader, $endpointSecret);
+        } catch (\UnexpectedValueException $e) {
+            return response()->json(['error' => 'Invalid payload'], 400);
+        } catch (\Stripe\Exception\SignatureVerificationException $e) {
+            return response()->json(['error' => 'Invalid signature'], 400);
+        }
+        
         Log::info('Event:', ['event' => $event]);
         Log::info('Event type:', ['event_type' => $event->type]);
         Log::info('Event data:', ['event_data' => $event->data]);
 
-        
-        try {
-            // if ($event->type === 'payment_intent.succeeded') {
-            //     $paymentIntent = $event->data->object;
-                
-            //     // Try to find payment by payment intent ID
-            //     $payment = Payment::where('payment_id', $paymentIntent->id)
-            //         ->orWhere('product_id', $paymentIntent->id)
-            //         ->first();
-                
-            //     if (!$payment) {
-            //         // If payment not found, try to get metadata from the payment intent
-            //         $metadata = $paymentIntent->metadata;
-            //         Log::info('Metadata:', ['metadata' => $metadata]);
-                    
-            //         if (empty($metadata) || empty($metadata->user_id)) {
-            //             Log::error('Missing user_id in payment intent metadata', [
-            //                 'payment_intent_id' => $paymentIntent->id,
-            //                 'metadata' => $metadata
-            //             ]);
-            //             return true;
-            //         }
-
-
-            //         $payment = Payment::create([
-            //             'user_id' => $metadata->user_id,
-            //             'payment_id' => $paymentIntent->id,
-            //             'provider' => 'stripe',
-            //             'status' => 'completed',
-            //             'amount' => $paymentIntent->amount / 100,
-            //             'currency' => $paymentIntent->currency,
-            //             'product_id' => $paymentIntent->id,
-            //             'metadata' => json_encode($metadata)
-            //         ]);
-
-            //         self::createEnrollments($metadata, $payment->id);
-            //     } else {
-            //         $payment->update(['status' => 'completed']);
-            //     }
-            //}
-
-            return true;
-        } catch (\Exception $e) {
-            Log::error('PaymentStripe::handleWebhook - Error', [
-                'message' => $e->getMessage(),
-                'event_type' => $event->type
-            ]);
-            throw $e;
+        switch ($event['type']) {
+            case 'payment_intent.succeeded':
+                self::handlePaymentIntentCreated($event['data']['object']);
+                break;
+            case 'checkout.session.completed':
+                self::handleCheckoutSessionCompleted($event['data']['object']);
+                break;
+            case 'payment_intent.created':
+                self::handlePaymentIntentCreated($event['data']['object']);
+                break;
+            default:
+                Log::info('Unhandled event type:', ['event_type' => $event->type]);
+                Log::info('Event:', ['event' => $event]);
+                return response()->json(['status' => 'Unhandled event type'], 200);
         }
+
+    }
+
+    private static function handlePaymentIntentSucceeded($paymentIntent)
+    {
+        // Lógica para manejar el pago exitoso
+    }
+
+    private static function handleCheckoutSessionCompleted($session)
+    {
+        $metadata = $session->metadata;
+
+        Log::info('Metadata:', ['metadata' => $metadata]);
+        
+        $payment = Payment::create([
+            'user_id' => $metadata->user_id,
+            'payment_id' => $session->id,
+            'provider' => 'stripe',
+            'status' => 'completed',
+            'amount' => $session->amount / 100,
+            'currency' => $session->currency,
+            'product_id' => $session->id,
+            'metadata' => json_encode($metadata)
+        ]);
+        self::createEnrollments($metadata, $payment->id);
+    }
+
+    private static function handlePaymentIntentCreated($paymentIntent)
+    {
+        // Lógica para manejar la creación del payment intent
     }
 
     private static function getItem($data)
