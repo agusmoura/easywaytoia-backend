@@ -41,14 +41,12 @@ class PaymentStripe
 
     public static function handleWebhook($payload, $sigHeader, $endpointSecret)
     {
-        Log::info('PaymentStripe::handleWebhook - Start');
-        Log::info('Event payload:', ['payload' => $payload]);
-        
+    
         $event = \Stripe\Webhook::constructEvent(
             $payload, $sigHeader, $endpointSecret
         );
-        
         Log::info('Event type:', ['type' => $event->type]);
+        
         
         try {
             if ($event->type === 'checkout.session.completed') {
@@ -69,6 +67,14 @@ class PaymentStripe
             } 
             else if ($event->type === 'payment_intent.created') {
                 $paymentLink = $event->data->object;
+                
+                if (empty($paymentLink->metadata) || !isset($paymentLink->metadata->user_id)) {
+                    Log::warning('Payment intent created without user_id in metadata', [
+                        'payment_intent_id' => $paymentLink->id
+                    ]);
+                    return true;
+                }
+                
                 $payment = Payment::create([
                     'user_id' => $paymentLink->metadata->user_id,
                     'payment_id' => $paymentLink->id,
