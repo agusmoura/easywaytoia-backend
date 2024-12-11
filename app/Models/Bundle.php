@@ -106,5 +106,10 @@ class Bundle extends Model
         $this->courses = $courseIdentifiers;
         $this->save();
     }
+
+    public function getCourses()
+    {
+        return Course::whereIn('identifier', $this->courses)->get();
+    }
 } 
 
