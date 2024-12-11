@@ -145,19 +145,29 @@ class PaymentStripe
         Log::info('PaymentStripe::createEnrollments - Start');
         Log::info('Metadata:', ['metadata' => $metadata]);
         Log::info('Payment ID:', ['payment_id' => $paymentId]);
+     
+
+        $itemType = $metadata->Stripe->StripeObject->item_type;
+        $itemId = $metadata->Stripe->StripeObject->item_id;
+        $userId = $metadata->Stripe->StripeObject->user_id;
+
+        Log::info('Item type:', ['item_type' => $itemType]);
+        Log::info('Item ID:', ['item_id' => $itemId]);
+        Log::info('User ID:', ['user_id' => $userId]);
         
-        if ($metadata->item_type === 'course') {
+        // if ($metadata->item_type === 'course') {
+        if ($itemType === 'course') {
             Enrollment::create([
-                'user_id' => $metadata->user_id,
-                'course_id' => $metadata->item_id,
+                'user_id' => $userId,
+                'course_id' => $itemId,
                 'payment_id' => $paymentId
             ]);
-        } elseif ($metadata->item_type === 'bundle') {
-            $bundle = Bundle::find($metadata->item_id);
+        } elseif ($itemType === 'bundle') {
+            $bundle = Bundle::find($itemId);
             $courses = $bundle->getCourses();
             foreach ($courses as $course) {
                 Enrollment::create([
-                    'user_id' => $metadata->user_id,
+                    'user_id' => $userId,
                     'course_id' => $course->id,
                     'bundle_id' => $bundle->id,
                     'payment_id' => $paymentId
