@@ -61,7 +61,7 @@ class PaymentStripe
                 if (!$payment) {
                     // If payment not found, try to get metadata from the payment intent
                     $metadata = $paymentIntent->metadata;
-                    
+                    Log::info('Metadata:', ['metadata' => $metadata]);
                     
                     if (empty($metadata) || empty($metadata->user_id)) {
                         Log::error('Missing user_id in payment intent metadata', [
@@ -71,7 +71,6 @@ class PaymentStripe
                         return true;
                     }
 
-                    Log::info('Metadata:', ['metadata' => $metadata]);
 
                     $payment = Payment::create([
                         'user_id' => $metadata->user_id,
