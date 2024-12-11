@@ -60,7 +60,28 @@ class PaymentStripe
             ]);
 
             self::createEnrollments($session->metadata, $payment->id);
-        } else {
+        } 
+        
+        else if ($event->type === 'payment_link.created') {
+            $paymentLink = $event->data->object;
+            $payment = Payment::create([
+                'user_id' => $paymentLink->metadata->user_id,
+                'payment_id' => $paymentLink->id,
+                'provider' => 'stripe',
+                'status' => 'pending',
+                'amount' => $paymentLink->amount_total / 100,
+                'currency' => $paymentLink->currency,
+                'product_id' => $paymentLink->id,
+                'metadata' => json_encode($paymentLink)
+            ]);
+        } 
+        else if ($event->type === 'payment_intent.succeeded') {
+            $paymentIntent = $event->data->object;
+            $payment = Payment::where('payment_id', $paymentIntent->id)->first();
+            $payment->update(['status' => 'completed']);
+            self::createEnrollments($paymentIntent->metadata, $payment->id);
+        } 
+        else {
             Log::error('PaymentStripe::handleWebhook - Evento no reconocido: ' . $event->type);
         }
 
