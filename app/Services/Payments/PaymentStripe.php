@@ -41,6 +41,9 @@ class PaymentStripe
 
     public static function handleWebhook($payload, $sigHeader, $endpointSecret)
     {
+        // Set Stripe API key first
+        Stripe::setApiKey(config('services.stripe.secret'));
+
         $event = \Stripe\Webhook::constructEvent(
             $payload, $sigHeader, $endpointSecret
         );
@@ -51,9 +54,25 @@ class PaymentStripe
                 $session = $event->data->object;
                 
                 // Get metadata from the payment link
-                $paymentLink = \Stripe\PaymentLink::retrieve($session->payment_link);
-                $metadata = $paymentLink->metadata;
+                try {
+                    $paymentLink = \Stripe\PaymentLink::retrieve($session->payment_link);
+                    $metadata = $paymentLink->metadata;
+                } catch (\Exception $e) {
+                    Log::error('Failed to retrieve payment link metadata', [
+                        'payment_link' => $session->payment_link,
+                        'error' => $e->getMessage()
+                    ]);
+                    $metadata = $session->metadata;
+                }
                 
+                if (empty($metadata) || empty($metadata->user_id)) {
+                    Log::error('Missing user_id in metadata', [
+                        'session_id' => $session->id,
+                        'metadata' => $metadata
+                    ]);
+                    return true;
+                }
+
                 $payment = Payment::create([
                     'user_id' => $metadata->user_id,
                     'payment_id' => $session->id,
@@ -69,26 +88,39 @@ class PaymentStripe
             } 
             else if ($event->type === 'payment_intent.succeeded') {
                 $paymentIntent = $event->data->object;
-                $payment = Payment::where('payment_id', $paymentIntent->id)->first();
+                
+                // Try to find payment by payment intent ID
+                $payment = Payment::where('payment_id', $paymentIntent->id)
+                    ->orWhere('product_id', $paymentIntent->id)
+                    ->first();
                 
                 if (!$payment) {
-                    Log::error('Payment not found for payment_intent: ' . $paymentIntent->id);
-                    // Create payment record if it doesn't exist
+                    // If payment not found, try to get metadata from the payment intent
+                    $metadata = $paymentIntent->metadata;
+                    
+                    if (empty($metadata) || empty($metadata->user_id)) {
+                        Log::error('Missing user_id in payment intent metadata', [
+                            'payment_intent_id' => $paymentIntent->id,
+                            'metadata' => $metadata
+                        ]);
+                        return true;
+                    }
+
                     $payment = Payment::create([
-                        'user_id' => $paymentIntent->metadata->user_id,
+                        'user_id' => $metadata->user_id,
                         'payment_id' => $paymentIntent->id,
                         'provider' => 'stripe',
                         'status' => 'completed',
                         'amount' => $paymentIntent->amount / 100,
                         'currency' => $paymentIntent->currency,
                         'product_id' => $paymentIntent->id,
-                        'metadata' => json_encode($paymentIntent->metadata)
+                        'metadata' => json_encode($metadata)
                     ]);
+
+                    self::createEnrollments($metadata, $payment->id);
                 } else {
                     $payment->update(['status' => 'completed']);
                 }
-                
-                self::createEnrollments($paymentIntent->metadata, $payment->id);
             }
 
             Log::info('PaymentStripe::handleWebhook - Success');
