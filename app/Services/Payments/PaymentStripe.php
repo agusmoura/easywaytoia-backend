@@ -47,47 +47,51 @@ class PaymentStripe
         $event = \Stripe\Webhook::constructEvent(
             $payload, $sigHeader, $endpointSecret
         );
-      
+
+        Log::info('Event:', ['event' => $event]);
+        Log::info('Event type:', ['event_type' => $event->type]);
+        Log::info('Event data:', ['event_data' => $event->data]);
+
         
         try {
-            if ($event->type === 'payment_intent.succeeded') {
-                $paymentIntent = $event->data->object;
+            // if ($event->type === 'payment_intent.succeeded') {
+            //     $paymentIntent = $event->data->object;
                 
-                // Try to find payment by payment intent ID
-                $payment = Payment::where('payment_id', $paymentIntent->id)
-                    ->orWhere('product_id', $paymentIntent->id)
-                    ->first();
+            //     // Try to find payment by payment intent ID
+            //     $payment = Payment::where('payment_id', $paymentIntent->id)
+            //         ->orWhere('product_id', $paymentIntent->id)
+            //         ->first();
                 
-                if (!$payment) {
-                    // If payment not found, try to get metadata from the payment intent
-                    $metadata = $paymentIntent->metadata;
-                    Log::info('Metadata:', ['metadata' => $metadata]);
+            //     if (!$payment) {
+            //         // If payment not found, try to get metadata from the payment intent
+            //         $metadata = $paymentIntent->metadata;
+            //         Log::info('Metadata:', ['metadata' => $metadata]);
                     
-                    if (empty($metadata) || empty($metadata->user_id)) {
-                        Log::error('Missing user_id in payment intent metadata', [
-                            'payment_intent_id' => $paymentIntent->id,
-                            'metadata' => $metadata
-                        ]);
-                        return true;
-                    }
+            //         if (empty($metadata) || empty($metadata->user_id)) {
+            //             Log::error('Missing user_id in payment intent metadata', [
+            //                 'payment_intent_id' => $paymentIntent->id,
+            //                 'metadata' => $metadata
+            //             ]);
+            //             return true;
+            //         }
 
 
-                    $payment = Payment::create([
-                        'user_id' => $metadata->user_id,
-                        'payment_id' => $paymentIntent->id,
-                        'provider' => 'stripe',
-                        'status' => 'completed',
-                        'amount' => $paymentIntent->amount / 100,
-                        'currency' => $paymentIntent->currency,
-                        'product_id' => $paymentIntent->id,
-                        'metadata' => json_encode($metadata)
-                    ]);
+            //         $payment = Payment::create([
+            //             'user_id' => $metadata->user_id,
+            //             'payment_id' => $paymentIntent->id,
+            //             'provider' => 'stripe',
+            //             'status' => 'completed',
+            //             'amount' => $paymentIntent->amount / 100,
+            //             'currency' => $paymentIntent->currency,
+            //             'product_id' => $paymentIntent->id,
+            //             'metadata' => json_encode($metadata)
+            //         ]);
 
-                    self::createEnrollments($metadata, $payment->id);
-                } else {
-                    $payment->update(['status' => 'completed']);
-                }
-            }
+            //         self::createEnrollments($metadata, $payment->id);
+            //     } else {
+            //         $payment->update(['status' => 'completed']);
+            //     }
+            //}
 
             return true;
         } catch (\Exception $e) {
