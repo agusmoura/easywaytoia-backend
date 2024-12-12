@@ -78,6 +78,8 @@ class PaymentStripe
                 ]);
                 return response()->json(['status' => 'Unhandled event type'], 200);
         }
+
+        return response()->json(['status' => 'Event handled'], 200);
     }
 
     private static function handlePaymentIntentSucceeded($paymentIntent)
