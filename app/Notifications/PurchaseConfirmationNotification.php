@@ -59,7 +59,7 @@ class PurchaseConfirmationNotification extends Notification
             ->line('3. ¡Comienza a aprender!')
             ->action('Ir a Mi Panel de Aprendizaje', config('app.frontend_url') . '/my-account')
             ->line('🤝 Si necesitas ayuda o tienes alguna pregunta, nuestro equipo de soporte está aquí para ayudarte.')
-            ->line('📧 Puedes contactarnos en: ' . config('mail.from.address'))
+            ->line('📧 Puedes contactarnos en: ' . config('mail.from.sales'))
             ->salutation('¡Éxitos en tu aprendizaje! 🚀');
     }
 }

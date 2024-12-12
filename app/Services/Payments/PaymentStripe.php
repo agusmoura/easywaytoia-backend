@@ -81,6 +81,11 @@ class PaymentStripe
 
     private static function handleCheckoutSessionCompleted($session)
     {
+        $payment = Payment::where('payment_id', $session->id)->first();
+        if ($payment) {
+            return;
+        }
+
         $payment = Payment::create([
             'user_id' => $session->metadata->user_id,
             'payment_id' => $session->id,
@@ -121,107 +126,61 @@ class PaymentStripe
     private static function createEnrollments($metadata, $paymentId)
     {
         try {
+            $payment = Payment::find($paymentId);
+            $user = User::find($metadata->user_id);
 
-            Log::info('Starting createEnrollments', [
-                'metadata' => $metadata,
-                'paymentId' => $paymentId
-        ]);
-
-        $payment = Payment::find($paymentId);
-        Log::info('Payment found', ['payment' => $payment]);
-
-        $user = User::find($metadata->user_id);
-        Log::info('User lookup result', [
-            'user_id' => $metadata->user_id,
-            'user_found' => $user ? true : false,
-            'user_email' => $user ? $user->email : null
-        ]);
-
-        if ($metadata->item_type === 'course') {
-            Log::info('Processing course enrollment', [
-                'course_id' => $metadata->item_id
-            ]);
-
-            // Check if enrollment already exists
-            $existingEnrollment = Enrollment::where('user_id', $metadata->user_id)
-                ->where('course_id', $metadata->item_id)
-                ->where('payment_id', $paymentId)
-                ->first();
-
-            Log::info('Existing enrollment check', [
-                'exists' => $existingEnrollment ? true : false
-            ]);
-
-            if (!$existingEnrollment) {
-                $enrollment = Enrollment::create([
-                    'user_id' => $metadata->user_id,
-                    'course_id' => $metadata->item_id,
-                    'payment_id' => $paymentId,
-                    'status' => 'active',
-                    'enrolled_at' => now()
-                ]);
-                Log::info('New enrollment created', ['enrollment' => $enrollment]);
+            if ($payment->status === 'completed') {
+                return;
             }
-            
-            $payment->save();
-        } elseif ($metadata->item_type === 'bundle') {
-            Log::info('Processing bundle enrollment', [
-                'bundle_id' => $metadata->item_id
-            ]);
 
-            $bundle = Bundle::find($metadata->item_id);
-            $courses = $bundle->getCourses();
-            
-            foreach ($courses as $course) {
-                // Check if enrollment already exists
+            if ($metadata->item_type === 'course') {
                 $existingEnrollment = Enrollment::where('user_id', $metadata->user_id)
-                    ->where('course_id', $course->id)
-                    ->where('bundle_id', $bundle->id)
+                    ->where('course_id', $metadata->item_id)
                     ->where('payment_id', $paymentId)
                     ->first();
 
                 if (!$existingEnrollment) {
                     $enrollment = Enrollment::create([
                         'user_id' => $metadata->user_id,
-                        'course_id' => $course->id,
-                        'bundle_id' => $bundle->id,
+                        'course_id' => $metadata->item_id,
                         'payment_id' => $paymentId,
                         'status' => 'active',
                         'enrolled_at' => now()
                     ]);
-                    Log::info('New bundle course enrollment created', ['enrollment' => $enrollment]);
                 }
-            }
-            
-            $payment->bundle_id = $metadata->item_id;
-            $payment->save();
-        }
+                
+                $payment->save();
+            } elseif ($metadata->item_type === 'bundle') {
+                $bundle = Bundle::find($metadata->item_id);
+                $courses = $bundle->getCourses();
+                
+                foreach ($courses as $course) {
+                    // Check if enrollment already exists
+                    $existingEnrollment = Enrollment::where('user_id', $metadata->user_id)
+                        ->where('course_id', $course->id)
+                        ->where('bundle_id', $bundle->id)
+                        ->where('payment_id', $paymentId)
+                        ->first();
 
-        /* enviar mail de confirmación */
-        Log::info('Sending purchase confirmation notification', [
-            'payment' => $payment
-        ]);
+                    if (!$existingEnrollment) {
+                        $enrollment = Enrollment::create([
+                            'user_id' => $metadata->user_id,
+                            'course_id' => $course->id,
+                            'bundle_id' => $bundle->id,
+                            'payment_id' => $paymentId,
+                            'status' => 'active',
+                            'enrolled_at' => now()
+                        ]);
+                    }
+                }
+                
+                $payment->bundle_id = $metadata->item_id;
+                $payment->save();
+            }
 
-        if ($user) {
-            Log::info('Attempting to send purchase confirmation notification', [
-                'user_id' => $user->id,
-                'email' => $user->email
-            ]);
-            try {
-                $user->notify(new \App\Notifications\PurchaseConfirmationNotification($payment));
-                Log::info('Purchase confirmation notification sent successfully');
-            } catch (\Exception $e) {
-                Log::error('Failed to send purchase confirmation notification', [
-                    'error' => $e->getMessage(),
-                    'trace' => $e->getTraceAsString()
-                ]);
-            }
-        } else {
-            Log::error('User not found for purchase confirmation notification', [
-                    'user_id' => $metadata->user_id,
-                    'payment_id' => $paymentId
-                ]);
-            }
+
+            $user->notify(new \App\Notifications\PurchaseConfirmationNotification($payment));
+     
         } catch (\Exception $e) {
             Log::error('Error creating enrollments', [
                 'error' => $e->getMessage(),
