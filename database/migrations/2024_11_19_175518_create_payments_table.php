@@ -15,9 +15,9 @@ return new class extends Migration
             $table->string('provider_payment_id')->nullable();
             $table->string('provider'); // 'stripe' or 'uala'
             $table->string('status');
-            $table->decimal('amount', 10, 2);
-            $table->string('currency');
-            $table->string('product_id');
+            $table->decimal('amount', 10, 2)->nullable();
+            $table->string('currency')->nullable();
+            $table->string('product_id')->nullable();
             $table->json('metadata')->nullable();
             $table->string('buy_link')->nullable();
             $table->timestamps();

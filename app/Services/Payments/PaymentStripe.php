@@ -25,8 +25,6 @@ class PaymentStripe
             'payment_id' => $paymentId,
             'provider' => 'stripe',
             'status' => 'created',
-            'amount' => $data['amount'],
-            'currency' => $data['currency'],
             'product_id' => $item->id,
         ]);
         $payment->save();
@@ -112,6 +110,8 @@ class PaymentStripe
         }
 
         $payment->provider_payment_id = $session->id;
+        $payment->amount = $session->amount_total / 100;
+        $payment->currency = $session->currency;
         $payment->status = 'completed';
         $payment->save();
 
