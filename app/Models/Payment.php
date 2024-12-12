@@ -53,7 +53,7 @@ class Payment extends Model
             throw new \Exception('El usuario no es un alumno registrado', 401);
         }
 
-      
+      $enrollmentsExists = false;
 
         /* verificar que exista el curso o bundle */
         if ( $data['type'] === 'course' && isset($data['identifier'])) {
@@ -61,6 +61,10 @@ class Payment extends Model
             if (!$course) {
                 throw new \Exception('El curso no existe', 404);
             }
+
+            $enrollmentsExists = Enrollment::where('user_id', $user->id)
+                ->where('course_id', $course->id)
+                ->exists();
         }
 
         if ($data['type'] === 'bundle' && isset($data['identifier'])) {
@@ -68,13 +72,12 @@ class Payment extends Model
             if (!$bundle) {
                 throw new \Exception('El bundle no existe', 404);
             }
+
+            $enrollmentsExists = Enrollment::where('user_id', $user->id)
+                ->orWhere('bundle_id', $bundle->id)
+                ->exists();
         }
 
-
-        $enrollmentsExists = Enrollment::where('user_id', $user->id)
-            ->where('course_id', $course->id)
-            ->orWhere('bundle_id', $bundle->id)
-            ->exists();
         if ($enrollmentsExists) {
             throw new \Exception('El usuario ya tiene una inscripción activa a este seminario o bundle', 401);
         }
