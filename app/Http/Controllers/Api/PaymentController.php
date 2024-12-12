@@ -17,55 +17,6 @@ use Stripe\Webhook;
 
 class PaymentController extends Controller
 {
-    private function handleSuccessfulPayment($payment)
-    {
-        // Actualizar estado del pago
-        $payment->update([
-            'status' => 'completed',
-            'completed_at' => now()
-        ]);
-
-        // Crear inscripciones según el tipo de compra
-        if ($payment->course_id) {
-            // Compra de curso individual
-            Enrollment::create([
-                'user_id' => $payment->user_id,
-                'course_id' => $payment->course_id,
-                'payment_id' => $payment->id,
-                'status' => 'active',
-                'enrolled_at' => now()
-            ]);
-        } elseif ($payment->bundle_id) {
-            // Compra de bundle
-            $bundle = Bundle::with('courses')->find($payment->bundle_id);
-            
-            foreach ($bundle->courses as $course) {
-                Enrollment::create([
-                    'user_id' => $payment->user_id,
-                    'course_id' => $course->id,
-                    'payment_id' => $payment->id,
-                    'bundle_id' => $bundle->id,
-                    'status' => 'active',
-                    'enrolled_at' => now()
-                ]);
-            }
-        }
-
-        // Enviar email de confirmación
-        $user = User::find($payment->user_id);
-        $user->notify(new PurchaseConfirmationNotification($payment));
-
-        // Registrar log de la transacción exitosa
-        Log::info('Pago procesado exitosamente', [
-            'payment_id' => $payment->id,
-            'user_id' => $payment->user_id,
-            'amount' => $payment->amount,
-            'course_id' => $payment->course_id,
-            'bundle_id' => $payment->bundle_id
-        ]);
-    }
-
-  
 
     public function handleStripeWebhook(Request $request)
     {

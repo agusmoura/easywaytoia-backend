@@ -111,25 +111,48 @@ class PaymentStripe
         $user = User::find($metadata->user_id);
 
         if ($metadata->item_type === 'course') {
-            $course = Course::find($metadata->item_id);
-            Enrollment::create([
-                'user_id' => $metadata->user_id,
-                'course_id' => $metadata->item_id,
-                'payment_id' => $paymentId
-            ]);
+            // Check if enrollment already exists
+            $existingEnrollment = Enrollment::where('user_id', $metadata->user_id)
+                ->where('course_id', $metadata->item_id)
+                ->where('payment_id', $paymentId)
+                ->first();
+
+            if (!$existingEnrollment) {
+                Enrollment::create([
+                    'user_id' => $metadata->user_id,
+                    'course_id' => $metadata->item_id,
+                    'payment_id' => $paymentId,
+                    'status' => 'active',
+                    'enrolled_at' => now()
+                ]);
+            }
+            
             $payment->course_id = $metadata->item_id;
             $payment->save();
         } elseif ($metadata->item_type === 'bundle') {
             $bundle = Bundle::find($metadata->item_id);
             $courses = $bundle->getCourses();
+            
             foreach ($courses as $course) {
-                Enrollment::create([
-                    'user_id' => $metadata->user_id,
-                    'course_id' => $course->id,
-                    'bundle_id' => $bundle->id,
-                    'payment_id' => $paymentId
-                ]);
+                // Check if enrollment already exists
+                $existingEnrollment = Enrollment::where('user_id', $metadata->user_id)
+                    ->where('course_id', $course->id)
+                    ->where('bundle_id', $bundle->id)
+                    ->where('payment_id', $paymentId)
+                    ->first();
+
+                if (!$existingEnrollment) {
+                    Enrollment::create([
+                        'user_id' => $metadata->user_id,
+                        'course_id' => $course->id,
+                        'bundle_id' => $bundle->id,
+                        'payment_id' => $paymentId,
+                        'status' => 'active',
+                        'enrolled_at' => now()
+                    ]);
+                }
             }
+            
             $payment->bundle_id = $metadata->item_id;
             $payment->save();
         }
