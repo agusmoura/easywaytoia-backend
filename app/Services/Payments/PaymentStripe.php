@@ -91,7 +91,7 @@ class PaymentStripe
             'user_id' => $paymentLink->metadata->user_id,
             'payment_id' => $paymentLink->id,
             'provider' => 'stripe',
-            'status' => 'pending',
+            'status' => 'created',
             'amount' => $paymentLink->amount_total / 100,
             'currency' => $paymentLink->currency,
             'product_id' => $paymentLink->id,
