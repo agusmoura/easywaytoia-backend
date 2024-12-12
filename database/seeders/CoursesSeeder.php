@@ -18,7 +18,7 @@ class CoursesSeeder extends Seeder
                 'is_active' => true,
                 'stripe_price_id' => 'price_1QICn4GBpK56jnVeCcQ35fsX',
                 'price' => 25,
-                'success_page' => config('app.prod_frontend_url') . '/pages/felicitacionLM'
+                'success_page' => config('app.prod_frontend_url') . '/felicitacionLM'
             ],
             [
                 'identifier' => 'selia',
@@ -27,7 +27,7 @@ class CoursesSeeder extends Seeder
                 'is_active' => true,
                 'stripe_price_id' => 'price_1QICn4GBpK56jnVeCcQ35fsX',
                 'price' => 25,
-                'success_page' => config('app.prod_frontend_url') . '/pages/felicitacionSelia'
+                'success_page' => config('app.prod_frontend_url') . '/felicitacionSelia'
             ],
             [
                 'identifier' => 'belia',
@@ -36,7 +36,7 @@ class CoursesSeeder extends Seeder
                 'is_active' => true,
                 'stripe_price_id' => 'price_1QICptGBpK56jnVe5VaRQffz',
                 'price' => 25,
-                'success_page' => config('app.prod_frontend_url') . '/pages/felicitacionBelia'
+                'success_page' => config('app.prod_frontend_url') . '/felicitacionBelia'
             ],
             [
                 'identifier' => 'rolia',
@@ -45,7 +45,7 @@ class CoursesSeeder extends Seeder
                 'is_active' => true,
                 'stripe_price_id' => 'price_1QICsaGBpK56jnVePi5BjRAQ',
                 'price' => 25,
-                'success_page' => config('app.prod_frontend_url') . '/pages/felicitacionRolia'
+                'success_page' => config('app.prod_frontend_url') . '/felicitacionRolia'
             ],
             [
                 'identifier' => 'selia>max',
@@ -73,7 +73,7 @@ class CoursesSeeder extends Seeder
                 'is_active' => true,
                 'stripe_price_id' => 'price_1QICwUGBpK56jnVeWy58IAY1',
                 'price' => 45,
-                'success_page' => config('app.prod_frontend_url') . '/pages/felicitacionBundleA'
+                'success_page' => config('app.prod_frontend_url') . '/felicitacionBundleA'
             ],
             [
                 'identifier' => 'bndl_b_1_2_3',
@@ -82,7 +82,7 @@ class CoursesSeeder extends Seeder
                 'is_active' => true,
                 'stripe_price_id' => 'price_1QID02GBpK56jnVe5ZhsADnZ',
                 'price' => 65,
-                'success_page' => config('app.prod_frontend_url') . '/pages/felicitacionBundleB'
+                'success_page' => config('app.prod_frontend_url') . '/felicitacionBundleB'
             ]
         ];
 
