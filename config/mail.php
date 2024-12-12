@@ -111,6 +111,7 @@ return [
     'from' => [
         'address' => env('MAIL_FROM_ADDRESS', 'hello@example.com'),
         'name' => env('MAIL_FROM_NAME', 'Example'),
+        'sales' => env('MAIL_FROM_SALES', 'ventas@easyway2ia.com'),
     ],
 
 ];

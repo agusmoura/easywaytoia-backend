@@ -59,6 +59,9 @@ class PaymentStripe
             case 'checkout.session.completed':
                 self::handleCheckoutSessionCompleted($event['data']['object']);
                 break;
+            case 'checkout.session.expired':
+                self::handleCheckoutSessionExpired($event['data']['object']);
+                break;
             case 'payment_link.created':
             case 'payment_intent.created':
                 break;
@@ -102,6 +105,17 @@ class PaymentStripe
         return ($data['type'] === 'course' ? Course::class : Bundle::class)::where('identifier', $data['identifier'])
             ->where('is_active', true)
             ->firstOrFail();
+    }
+
+    private static function handleCheckoutSessionExpired($session)
+    {
+        $payment = Payment::where('payment_id', $session->id)->first();
+        $payment->status = 'expired';
+        $payment->save();
+
+        /* enviar mail de expiración */
+        $user = User::find($payment->user_id);
+        $user->notify(new \App\Notifications\PaymentExpiredNotification($payment));
     }
 
     private static function createEnrollments($metadata, $paymentId)
@@ -181,6 +195,11 @@ class PaymentStripe
             $payment->bundle_id = $metadata->item_id;
             $payment->save();
         }
+
+        /* enviar mail de confirmación */
+        Log::info('Sending purchase confirmation notification', [
+            'payment' => $payment
+        ]);
 
         if ($user) {
             Log::info('Attempting to send purchase confirmation notification', [
