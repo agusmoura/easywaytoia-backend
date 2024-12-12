@@ -79,7 +79,7 @@ class Payment extends Model
         }
 
         if ($enrollmentsExists) {
-            throw new \Exception('El usuario ya tiene una inscripción activa a este seminario o bundle', 401);
+            throw new \Exception('El usuario ya tiene una inscripción activa a este seminario o bundle', 400);
         }
 
 
