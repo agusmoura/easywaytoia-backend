@@ -15,8 +15,21 @@ class PaymentStripe
     public static function createPaymentLink(array $data, $user)
     {
         Stripe::setApiKey(config('services.stripe.secret'));
-
         $item = self::getItem($data);
+
+        /* generar un id de pago unico para dentro de la plataforma */
+        $paymentId = uniqid("eaia_");
+        
+        $payment = Payment::create([
+            'user_id' => $user['id'],
+            'payment_id' => $paymentId,
+            'provider' => 'stripe',
+            'status' => 'created',
+            'amount' => $data['amount'],
+            'currency' => $data['currency'],
+            'product_id' => $item->id,
+        ]);
+        $payment->save();
 
         $paymentLink = \Stripe\PaymentLink::create([
             'line_items' => [[
@@ -30,12 +43,16 @@ class PaymentStripe
                 ],
             ],
             'metadata' => [
+                'payment_id' => $paymentId,
                 'user_id' => $user['id'],
                 'item_type' => $data['type'],
                 'item_id' => $item->id,
             ],
             'customer_creation' => 'always',
         ]);
+
+        $payment->buy_link = $paymentLink->url;
+        $payment->save();
 
         return ['payment_link' => $paymentLink->url];
     }
@@ -61,19 +78,19 @@ class PaymentStripe
         
         switch ($event['type']) {
             case 'payment_link.created': //1
-                self::handlePaymentLinkCreated($event['data']['object']);
+                // self::handlePaymentLinkCreated($event['data']['object']);
                 break;
-            case 'payment_intent.succeeded':
-                self::handlePaymentIntentCreated($event['data']['object']);
+            case 'payment_intent.created': //2
+            case 'payment_intent.succeeded': //3
+                // self::handlePaymentIntentCreated($event['data']['object']);
                 break;
-            case 'checkout.session.completed':
+            case 'checkout.session.completed': //4
                 self::handleCheckoutSessionCompleted($event['data']['object']);
                 break;
-            case 'checkout.session.expired':
+            case 'checkout.session.expired': //5
                 self::handleCheckoutSessionExpired($event['data']['object']);
                 break;
-            case 'payment_intent.created':
-                break;
+            
             default:
                 Log::error('Unhandled event type:', [
                     'event_type' => $event['type'],
@@ -85,36 +102,22 @@ class PaymentStripe
         return response()->json(['status' => 'Event handled'], 200);
     }
 
-    private static function handlePaymentLinkCreated($paymentLink) //1
-    {
-        $payment = Payment::create([
-            'user_id' => $paymentLink->metadata->user_id,
-            'payment_id' => $paymentLink->id,
-            'provider' => 'stripe',
-            'status' => 'created',
-            'amount' => $paymentLink->amount_total / 100,
-            'currency' => $paymentLink->currency,
-            'product_id' => $paymentLink->id,
-            'metadata' => json_encode($paymentLink->metadata)
-        ]);
-        $payment->save();
-    }
-
-    private static function handlePaymentIntentSucceeded($paymentIntent)
-    {
-        // Lógica para manejar el pago exitoso
-    }
 
     private static function handleCheckoutSessionCompleted($session)
     {
-       
-        // self::createEnrollments($session->metadata, $payment->id);
+        $payment = Payment::where('payment_id', $session->metadata->payment_id)->first();
+
+        if (!$payment) {
+            return;
+        }
+
+        $payment->provider_payment_id = $session->id;
+        $payment->status = 'completed';
+        $payment->save();
+
+        self::createEnrollments($session->metadata, $payment->id);
     }
 
-    private static function handlePaymentIntentCreated($paymentIntent)
-    {
-        // Lógica para manejar la creación del payment intent
-    }
 
     private static function getItem($data)
     {
@@ -125,7 +128,7 @@ class PaymentStripe
 
     private static function handleCheckoutSessionExpired($session)
     {
-        $payment = Payment::where('payment_id', $session->id)->first();
+        $payment = Payment::where('payment_id', $session->metadata->payment_id)->first();
         $payment->status = 'expired';
         $payment->save();
 

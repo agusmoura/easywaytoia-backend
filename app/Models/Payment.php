@@ -20,12 +20,14 @@ class Payment extends Model
     protected $fillable = [
         'user_id',
         'payment_id',
+        'provider_payment_id',
         'provider',
         'status',
         'amount',
         'currency',
         'product_id',
-        'metadata'
+        'metadata',
+        'buy_link'
     ];
 
     protected $casts = [

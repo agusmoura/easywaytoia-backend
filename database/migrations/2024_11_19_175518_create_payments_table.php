@@ -12,12 +12,14 @@ return new class extends Migration
             $table->id();
             $table->foreignId('user_id')->constrained('users')->onDelete('cascade');
             $table->string('payment_id');
+            $table->string('provider_payment_id')->nullable();
             $table->string('provider'); // 'stripe' or 'uala'
             $table->string('status');
             $table->decimal('amount', 10, 2);
             $table->string('currency');
             $table->string('product_id');
             $table->json('metadata')->nullable();
+            $table->string('buy_link')->nullable();
             $table->timestamps();
         });
 
