@@ -60,6 +60,9 @@ class PaymentStripe
         ]);
         
         switch ($event['type']) {
+            case 'payment_link.created': //1
+                self::handlePaymentLinkCreated($event['data']['object']);
+                break;
             case 'payment_intent.succeeded':
                 self::handlePaymentIntentCreated($event['data']['object']);
                 break;
@@ -69,7 +72,6 @@ class PaymentStripe
             case 'checkout.session.expired':
                 self::handleCheckoutSessionExpired($event['data']['object']);
                 break;
-            case 'payment_link.created':
             case 'payment_intent.created':
                 break;
             default:
@@ -83,6 +85,21 @@ class PaymentStripe
         return response()->json(['status' => 'Event handled'], 200);
     }
 
+    private static function handlePaymentLinkCreated($paymentLink) //1
+    {
+        $payment = Payment::create([
+            'user_id' => $paymentLink->metadata->user_id,
+            'payment_id' => $paymentLink->id,
+            'provider' => 'stripe',
+            'status' => 'pending',
+            'amount' => $paymentLink->amount_total / 100,
+            'currency' => $paymentLink->currency,
+            'product_id' => $paymentLink->id,
+            'metadata' => json_encode($paymentLink->metadata)
+        ]);
+        $payment->save();
+    }
+
     private static function handlePaymentIntentSucceeded($paymentIntent)
     {
         // Lógica para manejar el pago exitoso
@@ -90,23 +107,8 @@ class PaymentStripe
 
     private static function handleCheckoutSessionCompleted($session)
     {
-        $payment = Payment::where('payment_id', $session->id)->first();
-        if ($payment->status === 'completed') {
-            return;
-        }
-
-        $payment = Payment::create([
-            'user_id' => $session->metadata->user_id,
-            'payment_id' => $session->id,
-            'provider' => 'stripe',
-            'status' => 'completed',
-            'amount' => $session->amount_total / 100,
-            'currency' => $session->currency,
-            'product_id' => $session->id,
-            'metadata' => json_encode($session->metadata)
-        ]);
-
-        self::createEnrollments($session->metadata, $payment->id);
+       
+        // self::createEnrollments($session->metadata, $payment->id);
     }
 
     private static function handlePaymentIntentCreated($paymentIntent)
