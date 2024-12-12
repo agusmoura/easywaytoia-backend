@@ -81,6 +81,10 @@ class PaymentUala
                 $payment->status = 'completed';
                 $payment->save();
                 self::createEnrollments(json_decode($payment->metadata, true), $payment->id);
+                
+                // Send purchase confirmation notification
+                $user = \App\Models\User::find($payment->user_id);
+                $user->notify(new \App\Notifications\PurchaseConfirmationNotification($payment));
                 break;
 
             case 'REJECTED':

@@ -63,8 +63,8 @@ class PaymentStripe
             case 'payment_intent.created':
                 break;
             default:
-                Log::info('Unhandled event type:', ['event_type' => $event->type]);
-                Log::info('Event:', ['event' => $event]);
+                Log::error('Unhandled event type:', ['event_type' => $event->type]);
+                Log::error('Event:', ['event' => $event]);
                 return response()->json(['status' => 'Unhandled event type'], 200);
         }
 
@@ -77,8 +77,6 @@ class PaymentStripe
 
     private static function handleCheckoutSessionCompleted($session)
     {
-        Log::info('session:', ['session' => $session]);
-        
         $payment = Payment::create([
             'user_id' => $session->metadata->user_id,
             'payment_id' => $session->id,
@@ -157,7 +155,14 @@ class PaymentStripe
             $payment->save();
         }
 
-        // Send purchase confirmation notification
-        $user->notify(new \App\Notifications\PurchaseConfirmationNotification($payment));
+        if ($user) {
+            // Send purchase confirmation notification
+            $user->notify(new \App\Notifications\PurchaseConfirmationNotification($payment));
+        } else {
+            Log::error('User not found for purchase confirmation notification', [
+                'user_id' => $metadata['user_id'],
+                'payment_id' => $paymentId
+            ]);
+        }
     }
 } 
