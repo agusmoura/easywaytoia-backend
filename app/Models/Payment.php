@@ -53,13 +53,16 @@ class Payment extends Model
             throw new \Exception('El usuario no es un alumno registrado', 401);
         }
 
-        // Check if enrollment already exists
+        // Verificar si ya existe una inscripción
         $enrollmentExists = Enrollment::where('user_id', $user->id)
-            ->when($data['type'] === 'course', function($query) use ($data) {
-                return $query->where('course_id', $data['identifier']);
-            })
-            ->when($data['type'] === 'bundle', function($query) use ($data) {
-                return $query->where('bundle_id', $data['identifier']); 
+            ->where(function($query) use ($data) {
+                if ($data['type'] === 'course') {
+                    $query->where('course_id', $data['identifier'])
+                          ->whereNull('bundle_id');
+                } else {
+                    $query->where('bundle_id', $data['identifier'])
+                          ->whereNull('course_id');
+                }
             })
             ->exists();
 
