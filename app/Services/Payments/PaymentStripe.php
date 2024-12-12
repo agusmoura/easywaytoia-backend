@@ -7,6 +7,7 @@ use App\Models\Payment;
 use App\Models\Enrollment;
 use App\Models\Bundle;
 use App\Models\Course;
+use App\Models\User;
 use Illuminate\Support\Facades\Log;
 
 class PaymentStripe
@@ -106,33 +107,34 @@ class PaymentStripe
 
     private static function createEnrollments($metadata, $paymentId)
     {
-        Log::info('PaymentStripe::createEnrollments - Start');
+        $payment = Payment::find($paymentId);
+        $user = User::find($metadata->user_id);
 
-        $itemType = $metadata->item_type;
-        $itemId = $metadata->item_id;
-        $userId = $metadata->user_id;
-
-        Log::info('Item type:', ['item_type' => $itemType]);
-        Log::info('Item ID:', ['item_id' => $itemId]);
-        Log::info('User ID:', ['user_id' => $userId]);
-        
-        if ($itemType === 'course') {
+        if ($metadata->item_type === 'course') {
+            $course = Course::find($metadata->item_id);
             Enrollment::create([
-                'user_id' => $userId,
-                'course_id' => $itemId,
+                'user_id' => $metadata->user_id,
+                'course_id' => $metadata->item_id,
                 'payment_id' => $paymentId
             ]);
-        } elseif ($itemType === 'bundle') {
-            $bundle = Bundle::find($itemId);
+            $payment->course_id = $metadata->item_id;
+            $payment->save();
+        } elseif ($metadata->item_type === 'bundle') {
+            $bundle = Bundle::find($metadata->item_id);
             $courses = $bundle->getCourses();
             foreach ($courses as $course) {
                 Enrollment::create([
-                    'user_id' => $userId,
+                    'user_id' => $metadata->user_id,
                     'course_id' => $course->id,
                     'bundle_id' => $bundle->id,
                     'payment_id' => $paymentId
                 ]);
             }
+            $payment->bundle_id = $metadata->item_id;
+            $payment->save();
         }
+
+        // Send purchase confirmation notification
+        $user->notify(new \App\Notifications\PurchaseConfirmationNotification($payment));
     }
 } 
