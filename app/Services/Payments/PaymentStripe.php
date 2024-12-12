@@ -51,6 +51,12 @@ class PaymentStripe
         } catch (\Stripe\Exception\SignatureVerificationException $e) {
             return response()->json(['error' => 'Invalid signature'], 400);
         }
+
+        /* necesito loguear que evento viene y a que hora */
+        Log::info('Event received', [
+            'event_type' => $event['type'],
+            'timestamp' => now()->format('Y-m-d H:i:s')
+        ]);
         
         switch ($event['type']) {
             case 'payment_intent.succeeded':
@@ -82,7 +88,7 @@ class PaymentStripe
     private static function handleCheckoutSessionCompleted($session)
     {
         $payment = Payment::where('payment_id', $session->id)->first();
-        if ($payment) {
+        if ($payment->status === 'completed') {
             return;
         }
 
