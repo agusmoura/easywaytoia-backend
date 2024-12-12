@@ -63,11 +63,12 @@ class PaymentStripe
             case 'payment_intent.created':
                 break;
             default:
-                Log::error('Unhandled event type:', ['event_type' => $event->type]);
-                Log::error('Event:', ['event' => $event]);
+                Log::error('Unhandled event type:', [
+                    'event_type' => $event['type'],
+                    'event' => $event
+                ]);
                 return response()->json(['status' => 'Unhandled event type'], 200);
         }
-
     }
 
     private static function handlePaymentIntentSucceeded($paymentIntent)
@@ -105,29 +106,54 @@ class PaymentStripe
 
     private static function createEnrollments($metadata, $paymentId)
     {
+        Log::info('Starting createEnrollments', [
+            'metadata' => $metadata,
+            'paymentId' => $paymentId
+        ]);
+
         $payment = Payment::find($paymentId);
+        Log::info('Payment found', ['payment' => $payment]);
+
         $user = User::find($metadata->user_id);
+        Log::info('User lookup result', [
+            'user_id' => $metadata->user_id,
+            'user_found' => $user ? true : false,
+            'user_email' => $user ? $user->email : null
+        ]);
 
         if ($metadata->item_type === 'course') {
+            Log::info('Processing course enrollment', [
+                'course_id' => $metadata->item_id
+            ]);
+
             // Check if enrollment already exists
             $existingEnrollment = Enrollment::where('user_id', $metadata->user_id)
                 ->where('course_id', $metadata->item_id)
                 ->where('payment_id', $paymentId)
                 ->first();
 
+            Log::info('Existing enrollment check', [
+                'exists' => $existingEnrollment ? true : false
+            ]);
+
             if (!$existingEnrollment) {
-                Enrollment::create([
+                $enrollment = Enrollment::create([
                     'user_id' => $metadata->user_id,
                     'course_id' => $metadata->item_id,
                     'payment_id' => $paymentId,
                     'status' => 'active',
                     'enrolled_at' => now()
                 ]);
+                Log::info('New enrollment created', ['enrollment' => $enrollment]);
             }
             
             $payment->course_id = $metadata->item_id;
             $payment->save();
         } elseif ($metadata->item_type === 'bundle') {
+            Log::info('Processing bundle enrollment', [
+                'bundle_id' => $metadata->item_id
+            ]);
+
             $bundle = Bundle::find($metadata->item_id);
             $courses = $bundle->getCourses();
             
@@ -140,7 +166,7 @@ class PaymentStripe
                     ->first();
 
                 if (!$existingEnrollment) {
-                    Enrollment::create([
+                    $enrollment = Enrollment::create([
                         'user_id' => $metadata->user_id,
                         'course_id' => $course->id,
                         'bundle_id' => $bundle->id,
@@ -148,6 +174,7 @@ class PaymentStripe
                         'status' => 'active',
                         'enrolled_at' => now()
                     ]);
+                    Log::info('New bundle course enrollment created', ['enrollment' => $enrollment]);
                 }
             }
             
@@ -156,11 +183,22 @@ class PaymentStripe
         }
 
         if ($user) {
-            // Send purchase confirmation notification
-            $user->notify(new \App\Notifications\PurchaseConfirmationNotification($payment));
+            Log::info('Attempting to send purchase confirmation notification', [
+                'user_id' => $user->id,
+                'email' => $user->email
+            ]);
+            try {
+                $user->notify(new \App\Notifications\PurchaseConfirmationNotification($payment));
+                Log::info('Purchase confirmation notification sent successfully');
+            } catch (\Exception $e) {
+                Log::error('Failed to send purchase confirmation notification', [
+                    'error' => $e->getMessage(),
+                    'trace' => $e->getTraceAsString()
+                ]);
+            }
         } else {
             Log::error('User not found for purchase confirmation notification', [
-                'user_id' => $metadata['user_id'],
+                'user_id' => $metadata->user_id,
                 'payment_id' => $paymentId
             ]);
         }
