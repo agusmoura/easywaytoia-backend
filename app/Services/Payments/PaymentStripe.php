@@ -120,9 +120,11 @@ class PaymentStripe
 
     private static function createEnrollments($metadata, $paymentId)
     {
-        Log::info('Starting createEnrollments', [
-            'metadata' => $metadata,
-            'paymentId' => $paymentId
+        try {
+
+            Log::info('Starting createEnrollments', [
+                'metadata' => $metadata,
+                'paymentId' => $paymentId
         ]);
 
         $payment = Payment::find($paymentId);
@@ -217,8 +219,14 @@ class PaymentStripe
             }
         } else {
             Log::error('User not found for purchase confirmation notification', [
-                'user_id' => $metadata->user_id,
-                'payment_id' => $paymentId
+                    'user_id' => $metadata->user_id,
+                    'payment_id' => $paymentId
+                ]);
+            }
+        } catch (\Exception $e) {
+            Log::error('Error creating enrollments', [
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
             ]);
         }
     }
