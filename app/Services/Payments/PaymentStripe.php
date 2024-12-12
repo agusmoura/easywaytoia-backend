@@ -163,7 +163,6 @@ class PaymentStripe
                 Log::info('New enrollment created', ['enrollment' => $enrollment]);
             }
             
-            $payment->course_id = $metadata->item_id;
             $payment->save();
         } elseif ($metadata->item_type === 'bundle') {
             Log::info('Processing bundle enrollment', [
