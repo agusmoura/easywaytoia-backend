@@ -10,6 +10,7 @@ use App\Http\Controllers\Api\PaymentController;
 use App\Http\Controllers\Api\VerificationController;
 use App\Http\Controllers\Api\CourseController;
 use App\Http\Controllers\Api\BundleController;
+use App\Http\Controllers\Api\ContactController;
 
 
 Route::post('/register', [AuthController::class, 'register']);
@@ -27,6 +28,7 @@ Route::group(['middleware' => [JwtMiddleware::class]], function () {
     Route::post('/payments/create-link', [PaymentController::class, 'createPaymentLink']);
 
     Route::get('/my-account', [AuthController::class, 'getAccountInfo']);
+    Route::get('/contact/whatsapp', [ContactController::class, 'getWhatsAppLink']);
 
       // Rutas de superadmin
       Route::group(['middleware' => [AdminMiddleware::class]], function () {
