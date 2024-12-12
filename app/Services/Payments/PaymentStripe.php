@@ -55,6 +55,7 @@ class PaymentStripe
         /* necesito loguear que evento viene y a que hora */
         Log::info('Event received', [
             'event_type' => $event['type'],
+            'event_data' => $event['data']['object'],
             'timestamp' => now()->format('Y-m-d H:i:s')
         ]);
         
