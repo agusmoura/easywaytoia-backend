@@ -19,93 +19,45 @@ class PaymentUala
     {
         $username = config('services.uala.username');
         $clientId = config('services.uala.client_id');
-        $clientSecretId = config('services.uala.client_secret');
+        $clientSecret = config('services.uala.client_secret');
+        $isStaging = config('services.uala.is_staging', true);
 
-        $sdk = new SDK($username, $clientId, $clientSecretId, false);
-
+        $sdk = new SDK($username, $clientId, $clientSecret, $isStaging);
         $item = self::getItem($data);
         $paymentId = uniqid("eaia_");
+
+        $order = $sdk->createOrder(
+            $item->price,
+            "Compra de {$item->name}",
+            $data['success_page'],
+            config('app.prod_frontend_url') . '/failed',
+            config('app.prod_url') . '/api/webhooks/uala'
+        );
+
+        Log::info('Generated order', [
+            'generatedOrder' => $order
+        ]);
 
         $payment = Payment::create([
             'user_id' => $user['id'],
             'payment_id' => $paymentId,
+            'provider_payment_id' => $order->uuid,
             'provider' => 'uala',
-            'status' => 'created',
+            'status' => 'pending',
             'product_id' => $item->id,
+            'metadata' => json_encode([
+                'payment_id' => $paymentId,
+                'user_id' => $user['id'],
+                'item_type' => $data['type'],
+                'item_id' => $item->id
+            ])
         ]);
 
-        $order = $sdk->createOrder($item->price, "Compra de {$item->name}", $data['success_page'], config('app.prod_frontend_url') . '/failed');
-
-        Log::info('Order', [
-            'order' => $order
-        ]);
-
-        $generatedOrder = $sdk->getOrder($order->uuid);
-
-        Log::info('Generated order', [
-            'generatedOrder' => $generatedOrder
-        ]);
-
-        $payment->buy_link = $generatedOrder->checkout_url;
+        $payment->buy_link = $order->body->links->checkoutLink;
         $payment->save();
 
-        return ['payment_link' => $generatedOrder->checkout_url];
-
+        return ['payment_link' => $order->body->links->checkoutLink];
     }
-
-
-
-    // public static function createPaymentLink(array $data, $user)
-    // {
-    //     $paymentUala = new PaymentUala();
-    //     $paymentUala->getUalaAccessToken();
-
-    //     $item = self::getItem($data);
-        
-    //     /* generar un id de pago unico para dentro de la plataforma */
-    //     $paymentId = uniqid("eaia_");
-
-    //     $payment = Payment::create([
-    //         'user_id' => $user['id'],
-    //         'payment_id' => $paymentId,
-    //         'provider' => 'uala',
-    //         'status' => 'created',
-    //         'product_id' => $item->id,
-    //     ]);
-    //     $payment->save();
-
-    //     $paymentData = [
-    //         'amount' => $item->price,
-    //         'description' => "Pago por {$data['type']}: {$item->name}",
-    //         'callback_fail' => config('app.prod_frontend_url') . '/failed',
-    //         'callback_success' => $data['success_page'],
-    //         'notification_url' => config('app.prod_url') . '/api/webhooks/uala',
-    //         'external_reference' => $paymentId,
-    //         'metadata' => [
-    //             'payment_id' => $paymentId,
-    //             'user_id' => $user['id'],
-    //             'item_type' => $data['type'],
-    //             'item_id' => $item->id
-    //         ]
-    //     ];
-
-    //     Log::info('Payment data:', $paymentData);
-
-    //     $response = Http::withoutVerifying()
-    //         ->withToken($paymentUala->UALA_ACCESS_TOKEN)
-    //         ->post(config('services.uala.url_checkout'), $paymentData);
-
-    //     Log::info('Uala response:', $response->json());
-
-    //     if (!$response->successful()) {
-    //         throw new \Exception('Error al crear el link de pago en Ualá');
-    //     }
-
-    //     $payment->buy_link = $response['links']['checkout_link'];
-    //     $payment->save();
-
-    //     return ['payment_link' => $response['links']['checkout_link']];
-    // }
 
     public static function handleWebhook(array $data)
     {
