@@ -129,6 +129,11 @@ class PaymentStripe
     private static function handleCheckoutSessionExpired($session)
     {
         $payment = Payment::where('payment_id', $session->metadata->payment_id)->first();
+
+        if (!$payment) {
+            return;
+        }
+
         $payment->status = 'expired';
         $payment->save();
 
