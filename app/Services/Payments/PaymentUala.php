@@ -29,8 +29,8 @@ class PaymentUala
         $order = $sdk->createOrder(
             $item->price,
             "Compra de {$item->name}",
+            config('app.prod_frontend_url') . '/failed?payment_id=' . $paymentId,
             $item->success_page,
-            config('app.prod_frontend_url') . '/failed',
             config('app.prod_url') . '/api/webhooks/uala'
         );
 
@@ -87,12 +87,11 @@ class PaymentUala
 
         switch ($data['status']) {
             case 'APPROVED':
-                self::handlePaymentApproved($payment, $data);
+                self::handlePaymentApproved($data);
                 break;
-
             case 'REJECTED':
             case 'CANCELLED':
-                self::handlePaymentFailed($payment);
+                self::handlePaymentFailed($data);
                 break;
 
             default:
@@ -103,11 +102,16 @@ class PaymentUala
         return true;
     }
 
-    private static function handlePaymentApproved($payment, $data)
+    private static function handlePaymentApproved($data)
     {
+        $payment = Payment::where('provider_payment_id', $data['uuid'])->first();
+
+        if (!$payment) {
+            Log::error('Payment not found for external_reference: ' . $data['external_reference']);
+            throw new \Exception('Payment not found', 404);
+        }
+
         $payment->status = 'success';
-        $payment->amount = $data['amount'];
-        $payment->currency = 'ARS';
         $payment->save();
 
         $metadata = json_decode($payment->metadata);
