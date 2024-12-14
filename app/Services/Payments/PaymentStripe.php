@@ -113,9 +113,10 @@ class PaymentStripe
         $payment->amount = $session->amount_total / 100;
         $payment->currency = $session->currency;
         $payment->status = 'completed';
+        $payment->metadata = json_encode($session->metadata);
         $payment->save();
 
-        self::createEnrollments($session->metadata, $payment->id);
+        self::createEnrollments($session->metadata, $payment->provider_payment_id);
     }
 
 
@@ -145,7 +146,7 @@ class PaymentStripe
     private static function createEnrollments($metadata, $paymentId)
     {
         try {
-            $payment = Payment::find($paymentId);
+            $payment = Payment::where('payment_id', $paymentId)->first();
             $user = User::find($metadata->user_id);
 
             if ($payment->status === 'completed') {
