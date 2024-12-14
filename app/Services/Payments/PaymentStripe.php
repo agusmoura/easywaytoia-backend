@@ -164,19 +164,20 @@ class PaymentStripe
             if ($metadata->item_type === 'course') {
                 $existingEnrollment = Enrollment::where('user_id', $metadata->user_id)
                     ->where('course_id', $metadata->item_id)
-                    ->where('payment_id', $paymentId)
+                    ->where('payment_id', $payment->id)
                     ->first();
 
                 if (!$existingEnrollment) {
                     $enrollment = Enrollment::create([
                         'user_id' => $metadata->user_id,
                         'course_id' => $metadata->item_id,
-                        'payment_id' => $paymentId,
+                        'payment_id' => $payment->id,
                         'status' => 'active',
                         'enrolled_at' => now()
                     ]);
                 }
                 
+                $payment->status = 'completed';
                 $payment->save();
             } elseif ($metadata->item_type === 'bundle') {
                 $bundle = Bundle::find($metadata->item_id);
@@ -187,7 +188,7 @@ class PaymentStripe
                     $existingEnrollment = Enrollment::where('user_id', $metadata->user_id)
                         ->where('course_id', $course->id)
                         ->where('bundle_id', $bundle->id)
-                        ->where('payment_id', $paymentId)
+                        ->where('payment_id', $payment->id)
                         ->first();
 
                     if (!$existingEnrollment) {
@@ -195,7 +196,7 @@ class PaymentStripe
                             'user_id' => $metadata->user_id,
                             'course_id' => $course->id,
                             'bundle_id' => $bundle->id,
-                            'payment_id' => $paymentId,
+                            'payment_id' => $payment->id,
                             'status' => 'active',
                             'enrolled_at' => now()
                         ]);
@@ -206,7 +207,6 @@ class PaymentStripe
                 $payment->status = 'completed';
                 $payment->save();
             }
-
 
             $user->notify(new \App\Notifications\PurchaseConfirmationNotification($payment));
      
