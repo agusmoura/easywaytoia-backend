@@ -17,12 +17,12 @@ class PaymentUala
     
     public static function createPaymentLink(array $data, $user)	
     {
-        $username = config('services.uala.username');
-        $clientId = config('services.uala.client_id');
-        $clientSecret = config('services.uala.client_secret');
-        $isStaging = config('services.uala.is_staging', true);
+        try {
+            $username = config('services.uala.username');
+            $clientId = config('services.uala.client_id');
+            $clientSecret = config('services.uala.client_secret');
 
-        $sdk = new SDK($username, $clientId, $clientSecret, $isStaging);
+        $sdk = new SDK($username, $clientId, $clientSecret, false);
         $item = self::getItem($data);
         $paymentId = uniqid("eaia_");
 
@@ -57,6 +57,12 @@ class PaymentUala
         $payment->save();
 
         return ['payment_link' => $order->body->links->checkoutLink];
+        } catch (\Exception $e) {
+            Log::error('Error creating payment', [
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+        }
     }
 
     public static function handleWebhook(array $data)
