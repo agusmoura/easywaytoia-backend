@@ -40,6 +40,7 @@ class PaymentStripe
                     'url' => $data['success_page'],
                 ],
             ],
+            
             'metadata' => [
                 'payment_id' => $paymentId,
                 'user_id' => $user['id'],
@@ -95,7 +96,9 @@ class PaymentStripe
             case 'checkout.session.expired': //5
                 self::handleCheckoutSessionExpired($event['data']['object']);
                 break;
-            
+            case 'payment_intent.payment_failed': //5
+                self::handleCheckoutSessionExpired($event['data']['object']);
+                break;
             default:
                 Log::error('Unhandled event type:', [
                     'event_type' => $event['type'],
@@ -137,7 +140,7 @@ class PaymentStripe
             return;
         }
 
-        $payment->status = 'expired';
+        $payment->status = 'failed';
         $payment->save();
 
         /* enviar mail de expiración */
