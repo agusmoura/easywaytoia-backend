@@ -84,8 +84,12 @@ class PaymentController extends Controller
     {
         try {
             $oldPayment = Payment::where('payment_id', $uid)->firstOrFail();
+
+            $result = [
+                'payment_link' => $oldPayment->buy_link,
+            ];
             
-            return response()->json($oldPayment->buy_link);
+            return response()->json(data: $result, status: 200);
             
         } catch (\Exception $e) {
             Log::error('Error retrying payment', [
