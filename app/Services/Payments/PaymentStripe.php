@@ -55,6 +55,13 @@ class PaymentStripe
         return ['payment_link' => $paymentLink->url];
     }
 
+    private static function getItem($data)
+    {
+        return ($data['type'] === 'course' ? Course::class : Bundle::class)::where('identifier', $data['identifier'])
+            ->where('is_active', true)
+            ->firstOrFail();
+    }
+
     public static function handleWebhook($payload, $sigHeader, $endpointSecret)
     {
         Stripe::setApiKey(config('services.stripe.secret'));
@@ -120,12 +127,7 @@ class PaymentStripe
     }
 
 
-    private static function getItem($data)
-    {
-        return ($data['type'] === 'course' ? Course::class : Bundle::class)::where('identifier', $data['identifier'])
-            ->where('is_active', true)
-            ->firstOrFail();
-    }
+ 
 
     private static function handleCheckoutSessionExpired($session)
     {
@@ -146,8 +148,12 @@ class PaymentStripe
     private static function createEnrollments($metadata, $paymentId)
     {
         try {
-            $payment = Payment::where('payment_id', $paymentId)->first();
+            $payment = Payment::where('provider_payment_id', $paymentId)->first();
             $user = User::find($metadata->user_id);
+
+            if (!$payment) {
+                return;
+            }
 
             if ($payment->status === 'completed') {
                 return;
