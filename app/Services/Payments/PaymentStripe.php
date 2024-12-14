@@ -119,7 +119,7 @@ class PaymentStripe
         $payment->provider_payment_id = $session->id;
         $payment->amount = $session->amount_total / 100;
         $payment->currency = $session->currency;
-        $payment->status = 'completed';
+        $payment->status = 'success';
         $payment->metadata = json_encode($session->metadata);
         $payment->save();
 
@@ -151,9 +151,11 @@ class PaymentStripe
             $payment = Payment::where('provider_payment_id', $paymentId)->first();
             $user = User::find($metadata->user_id);
 
-            if (!$payment) {
-                return;
-            }
+            Log::info('Payment', [
+                'payment' => $payment,
+                'metadata' => $metadata,
+                'paymentId' => $paymentId
+            ]);
 
             if ($payment->status === 'completed') {
                 return;
@@ -201,6 +203,7 @@ class PaymentStripe
                 }
                 
                 $payment->bundle_id = $metadata->item_id;
+                $payment->status = 'completed';
                 $payment->save();
             }
 
