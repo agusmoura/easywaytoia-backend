@@ -34,7 +34,7 @@ class PaymentUala
             'product_id' => $item->id,
         ]);
 
-        $order = $sdk->createOrder($item->price, 'Compra de ' . $item->name, $data['success_page'], $data['failed_page']);
+        $order = $sdk->createOrder($item->price, "Compra de {$item->name}", $data['success_page'], config('app.prod_frontend_url') . '/failed');
 
         Log::info('Order', [
             'order' => $order
