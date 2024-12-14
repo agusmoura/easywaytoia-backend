@@ -26,6 +26,7 @@ Route::group(['middleware' => [JwtMiddleware::class]], function () {
     Route::post('logout', [AuthController::class, 'logout']);
     Route::get('test', [AuthController::class, 'test']);
     Route::post('/payments/create-link', [PaymentController::class, 'createPaymentLink']);
+    Route::get('/retry-payment/{uid}', [PaymentController::class, 'retryPayment']);
 
     Route::get('/my-account', [AuthController::class, 'getAccountInfo']);
     Route::get('/contact/whatsapp', [ContactController::class, 'getWhatsAppLink']);

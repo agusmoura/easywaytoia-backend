@@ -29,7 +29,7 @@ class PaymentUala
         $order = $sdk->createOrder(
             $item->price,
             "Compra de {$item->name}",
-            config('app.prod_frontend_url') . '/failed?payment_id=' . $paymentId,
+            config('app.prod_frontend_url') . '/failed?uid=' . $paymentId,
             $item->success_page,
             config('app.prod_url') . '/api/webhooks/uala'
         );

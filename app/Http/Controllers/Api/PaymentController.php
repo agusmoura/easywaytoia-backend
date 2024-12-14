@@ -79,4 +79,24 @@ class PaymentController extends Controller
             ], $e->getCode() ?: 500);
         }
     }
+
+    public function retryPayment($uid)
+    {
+        try {
+            $oldPayment = Payment::where('payment_id', $uid)->firstOrFail();
+            
+            return response()->json($oldPayment->buy_link);
+            
+        } catch (\Exception $e) {
+            Log::error('Error retrying payment', [
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
+                'payment_id' => $uid
+            ]);
+            
+            return response()->json([
+                'message' => 'Error al generar nuevo enlace de pago'
+            ], 500);
+        }
+    }
 } 
