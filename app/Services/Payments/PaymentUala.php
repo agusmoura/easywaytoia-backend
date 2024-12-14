@@ -116,13 +116,24 @@ class PaymentUala
 
     private static function handlePaymentFailed($payment)
     {
-        $payment->status = 'failed';
-        $payment->save();
+        try {
+            $payment->status = 'failed';
+            $payment->save();
 
-        $user = User::find($payment->user_id);
-        $user->notify(new \App\Notifications\PaymentExpiredNotification($payment));
+            $user = User::find($payment->user_id);
+            if ($user) {
+                $user->notify(new \App\Notifications\PaymentExpiredNotification($payment));
+            }
 
-        return response()->json(['status' => 'Event handled'], 200);
+            return response()->json(['status' => 'Event handled'], 200);
+        } catch (\Exception $e) {
+            Log::error('Error handling failed payment', [
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
+                'payment' => $payment
+            ]);
+            return response()->json(['status' => 'Error handling event'], 500);
+        }
     }
 
     private static function getItem($data)

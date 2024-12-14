@@ -32,7 +32,7 @@ class PaymentExpiredNotification extends Notification
             ->line('• Monto: $' . number_format($this->payment->amount, 2))
             ->line('• Fecha de expiración: ' . $this->payment->expired_at->format('d/m/Y H:i'))
             ->line('Si deseas completar tu compra, por favor realiza un nuevo intento de pago.')
-            ->action('Realizar Nuevo Pago', $this->payment->buy_link)
+            ->action('Realizar Nuevo Pago', config('app.frontend_url') . '/checkout')
             ->line('Si tienes alguna pregunta o necesitas ayuda, no dudes en contactarnos.')
             ->line('📧 Soporte: ' . config('mail.from.sales'))
             ->salutation('¡Gracias por tu interés en EasyWay2IA!');
