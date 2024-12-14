@@ -29,14 +29,17 @@ class PaymentUala
         $order = $sdk->createOrder(
             $item->price,
             "Compra de {$item->name}",
-            $data['success_page'],
+            $item->success_page,
             config('app.prod_frontend_url') . '/failed',
             config('app.prod_url') . '/api/webhooks/uala'
         );
 
         Log::info('Generated order', [
-            'generatedOrder' => $order
+            'generatedOrder' => $order,
+            'uuid' => $order->uuid,
+            'link' => $order->links->checkoutLink
         ]);
+
 
         $payment = Payment::create([
             'user_id' => $user['id'],
@@ -44,6 +47,8 @@ class PaymentUala
             'provider_payment_id' => $order->uuid,
             'provider' => 'uala',
             'status' => 'pending',
+            'amount' => $order->amount,
+            'currency' => "ARS",
             'product_id' => $item->id,
             'metadata' => json_encode([
                 'payment_id' => $paymentId,
@@ -53,10 +58,12 @@ class PaymentUala
             ])
         ]);
 
-        $payment->buy_link = $order->body->links->checkoutLink;
+
+
+        $payment->buy_link = $order->links->checkoutLink;
         $payment->save();
 
-        return ['payment_link' => $order->body->links->checkoutLink];
+        return ['payment_link' => $order->links->checkoutLink];
         } catch (\Exception $e) {
             Log::error('Error creating payment', [
                 'error' => $e->getMessage(),
