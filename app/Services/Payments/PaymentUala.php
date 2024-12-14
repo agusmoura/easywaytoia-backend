@@ -111,6 +111,11 @@ class PaymentUala
             throw new \Exception('Payment not found', 404);
         }
 
+        Log::info('Payment found', [
+            'payment' => $payment,
+            'data' => $data
+        ]);
+
         $payment->status = 'success';
         $payment->save();
 
