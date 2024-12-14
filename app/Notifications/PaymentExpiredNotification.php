@@ -24,8 +24,15 @@ class PaymentExpiredNotification extends Notification
 
     public function toMail($notifiable)
     {
+        $estado = match($this->payment->status) {
+            'failed' => 'fallido',
+            'pending' => 'pendiente',
+            'expired' => 'expirado',
+            default => 'expirado',
+        };
+
         return (new MailMessage)
-            ->subject('Pago Expirado en EasyWay2IA ⚠️')
+            ->subject('Pago ' . $estado . ' en EasyWay2IA ⚠️')
             ->greeting('Hola ' . $notifiable->student->name)
             ->line('Te informamos que tu pago ha expirado.')
             ->line('Detalles del pago:')
