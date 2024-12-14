@@ -76,7 +76,7 @@ class PaymentUala
     {
         Log::info('Uala Webhook received:', $data);
 
-        $payment = Payment::where('payment_id', $data['external_reference'])
+        $payment = Payment::where('provider_payment_id', $data['uuid'])
             ->where('provider', 'uala')
             ->first();
 
@@ -87,11 +87,11 @@ class PaymentUala
 
         switch ($data['status']) {
             case 'APPROVED':
-                self::handlePaymentApproved($data);
+                self::handlePaymentApproved($payment);
                 break;
             case 'REJECTED':
             case 'CANCELLED':
-                self::handlePaymentFailed($data);
+                self::handlePaymentFailed($payment);
                 break;
 
             default:
@@ -99,28 +99,19 @@ class PaymentUala
                 break;
         }
 
-        return true;
+        return response()->json(['status' => 'Event handled'], 200);
+
     }
 
-    private static function handlePaymentApproved($data)
+    private static function handlePaymentApproved($payment)
     {
-        $payment = Payment::where('provider_payment_id', $data['uuid'])->first();
-
-        if (!$payment) {
-            Log::error('Payment not found for external_reference: ' . $data['external_reference']);
-            throw new \Exception('Payment not found', 404);
-        }
-
-        Log::info('Payment found', [
-            'payment' => $payment,
-            'data' => $data
-        ]);
-
         $payment->status = 'success';
         $payment->save();
 
         $metadata = json_decode($payment->metadata);
         self::createEnrollments($metadata, $payment->id);
+
+        return response()->json(['status' => 'Event handled'], 200);
     }
 
     private static function handlePaymentFailed($payment)
@@ -130,6 +121,8 @@ class PaymentUala
 
         $user = User::find($payment->user_id);
         $user->notify(new \App\Notifications\PaymentExpiredNotification($payment));
+
+        return response()->json(['status' => 'Event handled'], 200);
     }
 
     private static function getItem($data)
@@ -141,6 +134,11 @@ class PaymentUala
 
     private static function createEnrollments($metadata, $paymentId)
     {
+        Log::info('Creating enrollments', [
+            'metadata' => $metadata,
+            'paymentId' => $paymentId
+        ]);
+
         try {
             $payment = Payment::find($paymentId);
             $user = User::find($metadata->user_id);
@@ -211,17 +209,4 @@ class PaymentUala
         }
     }
 
-    private function getUalaAccessToken()
-    {
-        $urlToken = config('services.uala.url_token');
-
-        $response = Http::withoutVerifying()->post($urlToken, [
-            'username' => config('services.uala.username'),
-            'client_id' => config('services.uala.client_id'),
-            'client_secret_id' => config('services.uala.client_secret'),
-            'grant_type' => 'client_credentials'
-        ]);
-
-        $this->UALA_ACCESS_TOKEN = $response->json('access_token');
-    }
 } 
