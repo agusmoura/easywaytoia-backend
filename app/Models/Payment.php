@@ -55,7 +55,7 @@ class Payment extends Model
             throw new \Exception('El usuario no es un alumno registrado', 401);
         }
 
-      $enrollmentsExists = false;
+        $enrollmentsExists = false;
 
         /* verificar que exista el curso o bundle */
         if ( $data['type'] === 'course' && isset($data['identifier'])) {

@@ -62,7 +62,7 @@ class PaymentUala
             $payment->buy_link = $order->links->checkoutLink;
             $payment->save();
 
-            return ['payment_link' => $order->links->checkoutLink];
+            return ['payment_link' => $payment->buy_link];
         } catch (\Exception $e) {
             Log::error('Error creating payment', [
                 'error' => $e->getMessage(),
