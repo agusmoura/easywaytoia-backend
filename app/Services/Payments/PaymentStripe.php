@@ -17,7 +17,6 @@ class PaymentStripe
         Stripe::setApiKey(config('services.stripe.secret'));
         $item = self::getItem($data);
 
-        /* generar un id de pago unico para dentro de la plataforma */
         $paymentId = uniqid("eaia_");
         
         $payment = Payment::create([

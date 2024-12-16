@@ -8,12 +8,6 @@ use App\Models\Payment;
 use App\Services\Payments\PaymentStripe;
 use App\Services\Payments\PaymentUala;
 use Illuminate\Support\Facades\Log;
-use App\Notifications\PurchaseConfirmationNotification;
-use App\Models\User;
-use App\Models\Enrollment;
-use App\Models\Course;
-use App\Models\Bundle;
-use Stripe\Webhook;
 
 class PaymentController extends Controller
 {

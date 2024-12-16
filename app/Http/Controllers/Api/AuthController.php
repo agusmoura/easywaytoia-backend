@@ -6,13 +6,6 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Models\User;
 use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Facades\Password;
-use Illuminate\Support\Facades\Hash;
-use App\Notifications\ResetPasswordNotification;
-use Illuminate\Support\Facades\Validator;
-use App\Models\Student;
-use App\Models\UserDevice;
-use Tymon\JWTAuth\Facades\JWTAuth;
 
 class AuthController extends Controller
 {

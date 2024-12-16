@@ -34,13 +34,6 @@ class PaymentUala
                 config('app.prod_url') . '/api/webhooks/uala'
             );
 
-            Log::info('Generated order', [
-                'generatedOrder' => $order,
-                'uuid' => $order->uuid,
-                'link' => $order->links->checkoutLink
-            ]);
-
-
             $payment = Payment::create([
                 'user_id' => $user['id'],
                 'payment_id' => $paymentId,
