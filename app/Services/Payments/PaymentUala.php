@@ -22,48 +22,47 @@ class PaymentUala
             $clientId = config('services.uala.client_id');
             $clientSecret = config('services.uala.client_secret');
 
-        $sdk = new SDK($username, $clientId, $clientSecret, false);
-        $item = self::getItem($data);
-        $paymentId = uniqid("eaia_");
+            $sdk = new SDK($username, $clientId, $clientSecret, isDev: true);
+            $item = self::getItem($data);
+            $paymentId = uniqid("eaia_");
 
-        $order = $sdk->createOrder(
-            $item->price,
-            "Compra de {$item->name}",
-            config('app.prod_frontend_url') . '/failed?uid=' . $paymentId,
-            $item->success_page,
-            config('app.prod_url') . '/api/webhooks/uala'
-        );
+            $order = $sdk->createOrder(
+                $item->price,
+                "Compra de {$item->name}",
+                config('app.prod_frontend_url') . '/failed?uid=' . $paymentId,
+                $item->success_page,
+                config('app.prod_url') . '/api/webhooks/uala'
+            );
 
-        Log::info('Generated order', [
-            'generatedOrder' => $order,
-            'uuid' => $order->uuid,
-            'link' => $order->links->checkoutLink
-        ]);
+            Log::info('Generated order', [
+                'generatedOrder' => $order,
+                'uuid' => $order->uuid,
+                'link' => $order->links->checkoutLink
+            ]);
 
 
-        $payment = Payment::create([
-            'user_id' => $user['id'],
-            'payment_id' => $paymentId,
-            'provider_payment_id' => $order->uuid,
-            'provider' => 'uala',
-            'status' => 'pending',
-            'amount' => $order->amount,
-            'currency' => "ARS",
-            'product_id' => $item->id,
-            'metadata' => json_encode([
-                'payment_id' => $paymentId,
+            $payment = Payment::create([
                 'user_id' => $user['id'],
-                'item_type' => $data['type'],
-                'item_id' => $item->id
-            ])
-        ]);
+                'payment_id' => $paymentId,
+                'provider_payment_id' => $order->uuid,
+                'provider' => 'uala',
+                'status' => 'pending',
+                'amount' => $order->amount,
+                'currency' => "ARS",
+                'product_id' => $item->id,
+                'metadata' => json_encode([
+                    'payment_id' => $paymentId,
+                    'user_id' => $user['id'],
+                    'item_type' => $data['type'],
+                    'item_id' => $item->id
+                ])
+            ]);
 
 
+            $payment->buy_link = $order->links->checkoutLink;
+            $payment->save();
 
-        $payment->buy_link = $order->links->checkoutLink;
-        $payment->save();
-
-        return ['payment_link' => $order->links->checkoutLink];
+            return ['payment_link' => $order->links->checkoutLink];
         } catch (\Exception $e) {
             Log::error('Error creating payment', [
                 'error' => $e->getMessage(),
