@@ -22,7 +22,7 @@ class PaymentUala
             $clientId = config('services.uala.client_id');
             $clientSecret = config('services.uala.client_secret');
 
-            $sdk = new SDK($username, $clientId, $clientSecret, isDev: true);
+            $sdk = new SDK($username, $clientId, $clientSecret, isDev: false);
             $item = self::getItem($data);
             $paymentId = uniqid("eaia_");
 

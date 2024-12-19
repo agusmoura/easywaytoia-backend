@@ -170,7 +170,7 @@ class PaymentStripe
                     ->first();
 
                 if (!$existingEnrollment) {
-                    $enrollment = Enrollment::create([
+                    Enrollment::create([
                         'user_id' => $metadata->user_id,
                         'course_id' => $metadata->item_id,
                         'payment_id' => $payment->id,
@@ -194,7 +194,7 @@ class PaymentStripe
                         ->first();
 
                     if (!$existingEnrollment) {
-                        $enrollment = Enrollment::create([
+                        Enrollment::create([
                             'user_id' => $metadata->user_id,
                             'course_id' => $course->id,
                             'bundle_id' => $bundle->id,
@@ -204,8 +204,6 @@ class PaymentStripe
                         ]);
                     }
                 }
-                
-                $payment->bundle_id = $metadata->item_id;
                 $payment->status = 'completed';
                 $payment->save();
             }
