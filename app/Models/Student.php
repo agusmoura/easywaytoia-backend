@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+
 class Student extends Model
 {
     use HasFactory;
@@ -23,17 +24,25 @@ class Student extends Model
         return $this->belongsTo(User::class);
     }
 
-    public function courses()
+    public function products()
     {
-        return $this->belongsToMany(Course::class, 'enrollments', 'user_id', 'course_id')
+        return $this->belongsToMany(Product::class, 'enrollments', 'user_id', 'product_id')
                     ->withPivot(['created_at', 'payment_id'])
                     ->withTimestamps();
     }
 
+    public function courses()
+    {
+        return $this->products()->where('type', 'course');
+    }
+
     public function bundles()
     {
-        return $this->belongsToMany(Bundle::class, 'enrollments', 'user_id', 'bundle_id')
-                    ->withPivot(['created_at', 'payment_id'])
-                    ->withTimestamps();
+        return $this->products()->where('type', 'bundle');
+    }
+
+    public function maximizers()
+    {
+        return $this->products()->where('type', 'maximizer');
     }
 }

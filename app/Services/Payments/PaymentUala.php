@@ -6,31 +6,29 @@ use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 use App\Models\Payment;
 use App\Models\Enrollment;
-use App\Models\Bundle;
-use App\Models\Course;
+use App\Models\Product;
 use App\Models\User;
 use Uala\SDK;
 
 class PaymentUala
 {
-    private $UALA_ACCESS_TOKEN;
-    
-    public static function createPaymentLink(array $data, $user)	
+    public static function createPaymentLink(Product $product, $user)	
     {
         try {
+            Log::info('Creating payment link');
             $username = config('services.uala.username');
             $clientId = config('services.uala.client_id');
             $clientSecret = config('services.uala.client_secret');
 
-            $sdk = new SDK($username, $clientId, $clientSecret, isDev: false);
-            $item = self::getItem($data);
+            $sdk = new SDK($username, $clientId, $clientSecret, isDev: true);
             $paymentId = uniqid("eaia_");
 
+
             $order = $sdk->createOrder(
-                $item->price,
-                "Compra de {$item->name}",
+                $product['price'],
+                "Compra de {$product['name']}",
                 config('app.prod_frontend_url') . '/failed?uid=' . $paymentId,
-                $item->success_page,
+                $product['success_page'],
                 config('app.prod_url') . '/api/webhooks/uala'
             );
 
@@ -42,12 +40,12 @@ class PaymentUala
                 'status' => 'pending',
                 'amount' => $order->amount,
                 'currency' => "ARS",
-                'product_id' => $item->id,
+                'product_id' => $product['id'],
                 'metadata' => json_encode([
                     'payment_id' => $paymentId,
                     'user_id' => $user['id'],
-                    'item_type' => $data['type'],
-                    'item_id' => $item->id
+                    'item_type' => $product['type'],
+                    'item_id' => $product['id']
                 ])
             ]);
 
@@ -61,6 +59,8 @@ class PaymentUala
                 'error' => $e->getMessage(),
                 'trace' => $e->getTraceAsString()
             ]);
+
+            throw new \Exception('Error al inicializar el servicio de pago', 500);
         }
     }
 
@@ -127,89 +127,81 @@ class PaymentUala
             return response()->json(['status' => 'Error handling event'], 500);
         }
     }
-
-    private static function getItem($data)
-    {
-        return ($data['type'] === 'course' ? Course::class : Bundle::class)::where('identifier', $data['identifier'])
-            ->where('is_active', true)
-            ->firstOrFail();
-    }
-
     private static function createEnrollments($metadata, $paymentId)
     {
-        Log::info('Creating enrollments', [
-            'metadata' => $metadata,
-            'paymentId' => $paymentId
-        ]);
-
         try {
-            $payment = Payment::find($paymentId);
+            $payment = self::getPayment($paymentId);
             $user = User::find($metadata->user_id);
 
-            Log::info('Payment', [
-                'payment' => $payment,
-                'metadata' => $metadata,
-                'paymentId' => $paymentId
-            ]);
-
-            if ($payment->status === 'completed') {
+            if (!$payment || $payment->status === 'completed') {
                 return;
             }
 
-            if ($metadata->item_type === 'course') {
-                $existingEnrollment = Enrollment::where('user_id', $metadata->user_id)
-                    ->where('course_id', $metadata->item_id)
-                    ->where('payment_id', $payment->id)
-                    ->first();
+            self::logPaymentDetails($payment, $metadata, $paymentId);
 
-                if (!$existingEnrollment) {
-                    $enrollment = Enrollment::create([
-                        'user_id' => $metadata->user_id,
-                        'course_id' => $metadata->item_id,
-                        'payment_id' => $payment->id,
-                        'status' => 'active',
-                        'enrolled_at' => now()
-                    ]);
-                }
-                
-                $payment->status = 'completed';
-                $payment->save();
-            } elseif ($metadata->item_type === 'bundle') {
-                $bundle = Bundle::find($metadata->item_id);
-                $courses = $bundle->getCourses();
-                
-                foreach ($courses as $course) {
-                    $existingEnrollment = Enrollment::where('user_id', $metadata->user_id)
-                        ->where('course_id', $course->id)
-                        ->where('bundle_id', $bundle->id)
-                        ->where('payment_id', $payment->id)
-                        ->first();
-
-                    if (!$existingEnrollment) {
-                        $enrollment = Enrollment::create([
-                            'user_id' => $metadata->user_id,
-                            'course_id' => $course->id,
-                            'bundle_id' => $bundle->id,
-                            'payment_id' => $payment->id,
-                            'status' => 'active',
-                            'enrolled_at' => now()
-                        ]);
-                    }
-                }
-                
-                $payment->bundle_id = $metadata->item_id;
-                $payment->status = 'completed';
-                $payment->save();
+            if (self::hasExistingEnrollment($metadata, $payment)) {
+                return;
             }
 
-            $user->notify(new \App\Notifications\PurchaseConfirmationNotification($payment));
-     
+            self::createNewEnrollment($metadata, $payment);
+            self::completePayment($payment);
+            self::notifyUser($user, $payment);
+
         } catch (\Exception $e) {
-            Log::error('Error creating enrollments', [
-                'error' => $e->getMessage(),
-                'trace' => $e->getTraceAsString()
-            ]);
+            self::logError($e);
         }
+    }
+
+    private static function getPayment($paymentId)
+    {
+        return Payment::where('provider_payment_id', $paymentId)->first();
+    }
+
+    private static function logPaymentDetails($payment, $metadata, $paymentId)
+    {
+        Log::info('Payment', [
+            'payment' => $payment,
+            'metadata' => $metadata,
+            'paymentId' => $paymentId
+        ]);
+    }
+
+    private static function hasExistingEnrollment($metadata, $payment)
+    {
+        return Enrollment::where('user_id', $metadata->user_id)
+            ->where('product_id', $metadata->item_id)
+            ->where('payment_id', $payment->id)
+            ->exists();
+    }
+
+    private static function createNewEnrollment($metadata, $payment)
+    {
+        Enrollment::create([
+            'user_id' => $metadata->user_id,
+            'product_id' => $metadata->item_id,
+            'payment_id' => $payment->id,
+            'status' => 'active',
+            'enrolled_at' => now()
+        ]);
+    }
+
+    private static function completePayment($payment)
+    {
+        $payment->status = 'completed';
+        $payment->save();
+    }
+
+    private static function notifyUser($user, $payment)
+    {
+        $user->notify(new \App\Notifications\PurchaseConfirmationNotification($payment));
+    }
+
+    private static function logError($exception)
+    {
+        Log::error('Error creating enrollments', [
+            'error' => $exception->getMessage(),
+            'trace' => $exception->getTraceAsString()
+        ]);
     }
 
 } 
