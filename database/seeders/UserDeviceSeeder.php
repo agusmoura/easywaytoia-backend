@@ -15,12 +15,20 @@ class UserDeviceSeeder extends Seeder
     public function run(): void
     {
         /* crea un usuario con el rol de superadmin */
-        User::create([
+        $user = User::create([
             'username' => config('auth.admin.username'),
             'email' => config('auth.admin.email'),
             'password' => Hash::make(config('auth.admin.password')),
             'email_verified_at' => now(),
             'is_admin' => true,
+        ]);
+
+        // Crear registro de estudiante para el admin
+        $user->student()->create([
+            'name' => 'Admin',
+            'last_name' => 'User',
+            'country' => 'argentina',
+            'phone' => '+1234567890'
         ]);
     }
 }

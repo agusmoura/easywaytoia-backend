@@ -11,6 +11,7 @@ use App\Http\Controllers\Api\VerificationController;
 use App\Http\Controllers\Api\CourseController;
 use App\Http\Controllers\Api\BundleController;
 use App\Http\Controllers\Api\ContactController;
+use App\Http\Controllers\Api\ProductController;
 
 
 Route::post('/register', [AuthController::class, 'register']);
@@ -33,15 +34,8 @@ Route::group(['middleware' => [JwtMiddleware::class]], function () {
 
       // Rutas de superadmin
       Route::group(['middleware' => [AdminMiddleware::class]], function () {
-        // Rutas de cursos
-        Route::post('/courses', [CourseController::class, 'store']);
-        Route::put('/courses/{course}', [CourseController::class, 'update']);
-        Route::patch('/courses/{course}/price', [CourseController::class, 'updatePrice']);
-
-        // Rutas de bundles
-        Route::post('/bundles', [BundleController::class, 'store']);
-        Route::put('/bundles/{bundle}', [BundleController::class, 'update']);
-        Route::patch('/bundles/{bundle}/price', [BundleController::class, 'updatePrice']);
+        Route::apiResource('products', ProductController::class)->except(['destroy']);
+        Route::patch('/products/{product}/price', [ProductController::class, 'updatePrice']);
     });
 });
 

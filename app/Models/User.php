@@ -18,6 +18,11 @@ use App\Notifications\ResetPasswordNotification;
 use App\Notifications\VerifyEmailNotification;
 use Illuminate\Support\Facades\Password;
 use Illuminate\Support\Facades\Log;
+use App\Models\Payment;
+use App\Models\Product;
+use App\Models\Course;
+use App\Models\Bundle;
+
 class User extends Authenticatable implements JWTSubject, MustVerifyEmail
 {
     /** @use HasFactory<\Database\Factories\UserFactory> */
@@ -252,23 +257,16 @@ class User extends Authenticatable implements JWTSubject, MustVerifyEmail
 
         $purchases = [];
         foreach ($enrollments as $enrollment) {
+
             $payment = Payment::find($enrollment->payment_id);
-            
-            if ($enrollment->course_id) {
-                $course = Course::find($enrollment->course_id);
-                $name = $course->name;
-                $identifier = $course->identifier;
-            } else {
-                $bundle = Bundle::find($enrollment->bundle_id);
-                $name = $bundle->name;
-                $identifier = $bundle->identifier; 
-            }
+            $product = Product::find(id: $enrollment->product_id);
 
             $purchases[] = [
                 'payment_id' => $payment->id,
-                'type' => $enrollment->course_id ? 'course' : 'bundle',
-                'identifier' => $identifier,
-                'name' => $name,
+                'type' => $product->type,
+                'identifier' => $product->identifier,
+                'name' => $product->name,
+                'description' => $product->description,
                 'purchased_at' => $payment->created_at->format('Y-m-d H:i:s'),
                 'amount' => $payment->amount
             ];
@@ -291,16 +289,6 @@ class User extends Authenticatable implements JWTSubject, MustVerifyEmail
     public function student()
     {
         return $this->hasOne(Student::class);
-    }
-
-    public function courses()
-    {
-        return $this->student->courses();
-    }
-
-    public function bundles()
-    {
-        return $this->student->bundles();
     }
 
     public function sendEmailVerificationNotification()

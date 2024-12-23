@@ -11,7 +11,7 @@ class Enrollment extends Model
 
     protected $fillable = [
         'user_id',
-        'course_id',
+        'product_id',
         'payment_id'
     ];
 
@@ -20,9 +20,9 @@ class Enrollment extends Model
         return $this->belongsTo(User::class);
     }
 
-    public function course()
+    public function product()
     {
-        return $this->belongsTo(Course::class);
+        return $this->belongsTo(Product::class);
     }
 
     public function payment()

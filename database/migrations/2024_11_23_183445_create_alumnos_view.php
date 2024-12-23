@@ -12,6 +12,8 @@ return new class extends Migration
      */
     public function up(): void
     {
+        DB::statement('DROP VIEW IF EXISTS alumnos_inscriptos');
+        
         DB::statement('CREATE VIEW alumnos_inscriptos AS
             SELECT 
                 s.id as id_alumno,
@@ -22,19 +24,17 @@ return new class extends Migration
                 u.email as email,
                 u.username as usuario,
                 ud.last_activity as ultimo_acceso,
-                c.name as curso,
-                c.identifier as identificador_curso,
-                b.name as paquete,
-                b.identifier as identificador_paquete,
-                p.created_at as fecha_inscripcion,
-                p.status as estado_pago
+                p.name as producto,
+                p.identifier as identificador_producto,
+                p.type as tipo_producto,
+                pay.created_at as fecha_inscripcion,
+                pay.status as estado_pago
             FROM student s
             JOIN users u ON s.user_id = u.id
             LEFT JOIN user_devices ud ON u.id = ud.user_id
             LEFT JOIN enrollments e ON u.id = e.user_id
-            LEFT JOIN courses c ON e.course_id = c.id
-            LEFT JOIN bundles b ON e.bundle_id = b.id
-            LEFT JOIN payments p ON e.payment_id = p.id');
+            LEFT JOIN products p ON e.product_id = p.id
+            LEFT JOIN payments pay ON e.payment_id = pay.id');
     }
 
     /**
@@ -42,6 +42,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        DB::statement('DROP VIEW IF EXISTS alumnos_inscriptos');
+        Schema::dropIfExists('alumnos_inscriptos');
     }
 };
