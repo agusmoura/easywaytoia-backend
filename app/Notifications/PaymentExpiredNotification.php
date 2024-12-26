@@ -34,7 +34,7 @@ class PaymentExpiredNotification extends Notification
         return (new MailMessage)
             ->subject('Pago ' . $estado . ' en EasyWay2IA ⚠️')
             ->greeting('Hola ' . $notifiable->student->name)
-            ->line('Te informamos que tu pago ha expirado.')
+            ->line('Te informamos que tu pago no se ha completado.')
             ->line('Detalles del pago:')
             ->line('• Monto: $' . number_format($this->payment->amount, 2))
             ->line('Si deseas completar tu compra, por favor realiza un nuevo intento de pago.')
