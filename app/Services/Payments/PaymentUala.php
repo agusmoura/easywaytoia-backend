@@ -121,15 +121,11 @@ class PaymentUala
     }
     private static function createEnrollments($metadata, $paymentId)
     {
-        Log::info("llego a createEnrollments", [
-            'metadata' => $metadata,
-            'paymentId' => $paymentId
-        ]);
         try {
             $payment = self::getPayment($paymentId);
             $user = User::find($metadata->user_id);
 
-            if (!$payment || $payment->status === 'completed') {
+            if (!$payment || $payment->status === 'success') {
                 return;
             }
 
