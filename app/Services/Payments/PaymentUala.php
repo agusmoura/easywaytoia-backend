@@ -8,37 +8,31 @@ use App\Models\Payment;
 use App\Models\Enrollment;
 use App\Models\Product;
 use App\Models\User;
-use Uala\SDK;
 
 class PaymentUala
 {
+    private static $accessToken;
+
+    /* **************************** */
     public static function createPaymentLink(Product $product, $user)	
     {
         try {
-            Log::info('Creating payment link');
-            $username = config('services.uala.username');
-            $clientId = config('services.uala.client_id');
-            $clientSecret = config('services.uala.client_secret');
-
-            $sdk = new SDK($username, $clientId, $clientSecret, isDev: true);
             $paymentId = uniqid("eaia_");
-
-
-            $order = $sdk->createOrder(
+            self::getToken();
+            $order = self::createOrder(
                 $product['price'],
                 "Compra de {$product['name']}",
                 config('app.prod_frontend_url') . '/failed?uid=' . $paymentId,
-                $product['success_page'],
+                config('app.prod_frontend_url') . '/success?uid=' . $paymentId,
                 config('app.prod_url') . '/api/webhooks/uala'
             );
-
             $payment = Payment::create([
                 'user_id' => $user['id'],
                 'payment_id' => $paymentId,
-                'provider_payment_id' => $order->uuid,
+                'provider_payment_id' => $order['uuid'],
                 'provider' => 'uala',
                 'status' => 'pending',
-                'amount' => $order->amount,
+                'amount' => $order['amount'],
                 'currency' => "ARS",
                 'product_id' => $product['id'],
                 'metadata' => json_encode([
@@ -48,9 +42,7 @@ class PaymentUala
                     'item_id' => $product['id']
                 ])
             ]);
-
-
-            $payment->buy_link = $order->links->checkoutLink;
+            $payment->buy_link = $order['links']['checkout_link'];
             $payment->save();
 
             return ['payment_link' => $payment->buy_link];
@@ -202,6 +194,76 @@ class PaymentUala
             'error' => $exception->getMessage(),
             'trace' => $exception->getTraceAsString()
         ]);
+    }
+
+
+    private static function getToken()
+    {
+        $url= "https://auth.developers.ar.ua.la/v2/api/auth/token";
+        $username = config('services.uala.username');
+        $clientId = config('services.uala.client_id');
+        $clientSecret = config('services.uala.client_secret');
+
+        try {
+            $response = Http::withoutVerifying()
+                ->post($url, [
+                    'username' => $username,
+                    'client_id' => $clientId,
+                    'client_secret_id' => $clientSecret,
+                    'grant_type' => 'client_credentials'
+                ]);
+
+            if (!$response->successful()) {
+                Log::error('Error response from Uala', [
+                    'status' => $response->status(),
+                    'body' => $response->body()
+                ]);
+                throw new \Exception('Error en la respuesta de Ualá');
+            }
+
+            $data = $response->json();
+            if (!isset($data['access_token'])) {
+                throw new \Exception('Token no encontrado en la respuesta');
+            }
+
+            self::$accessToken = $data['access_token'];
+            
+        } catch (\Exception $e) {
+            Log::error('Error getting token', [
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+            throw $e;
+        }
+    }
+
+    private static function createOrder(
+        $amount,
+        $description,
+        $callback_fail,
+        $callback_success,
+        $notification_url,
+    )
+    {
+        if (!self::$accessToken) {
+            self::getToken();
+        }
+
+        $url = "https://checkout.developers.ar.ua.la/v2/api/checkout";
+
+        $response = Http::withoutVerifying()->withHeaders([
+            'Authorization' => 'Bearer ' . self::$accessToken,
+            'Content-Type' => 'application/json'
+        ])->post($url, [
+            "amount" => $amount,
+            "description" => $description,
+            "callback_fail" => $callback_fail,
+            "callback_success" => $callback_success,
+            "notification_url" => $notification_url,
+            "external_reference" => "external_reference"
+        ]);
+
+        return $response->json();
     }
 
 } 
