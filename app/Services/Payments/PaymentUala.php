@@ -23,7 +23,7 @@ class PaymentUala
                 $product['price'],
                 "Compra de {$product['name']}",
                 config('app.prod_frontend_url') . '/failed?uid=' . $paymentId,
-                config('app.prod_frontend_url') . '/success?uid=' . $paymentId,
+                $product['success_page'],
                 config('app.prod_url') . '/api/webhooks/uala'
             );
             $payment = Payment::create([
