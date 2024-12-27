@@ -66,13 +66,6 @@ class PaymentStripe
             return response()->json(['error' => 'Invalid signature'], 400);
         }
 
-        /* necesito loguear que evento viene y a que hora */
-        Log::info('Event received', [
-            'event_type' => $event['type'],
-            'event_data' => $event['data']['object'],
-            'timestamp' => now()->format('Y-m-d H:i:s')
-        ]);
-        
         switch ($event['type']) {
             case 'payment_link.created': //1
                 // self::handlePaymentLinkCreated($event['data']['object']);
@@ -146,7 +139,6 @@ class PaymentStripe
                 return;
             }
 
-            self::logPaymentDetails($payment, $metadata, $paymentId);
 
             if (self::hasExistingEnrollment($metadata, $payment)) {
                 return;
@@ -157,7 +149,11 @@ class PaymentStripe
             self::notifyUser($user, $payment);
 
         } catch (\Exception $e) {
-            self::logError($e);
+            Log::error('Error creating enrollments', [
+                'timestamp' => now()->format('Y-m-d H:i:s'),
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
         }
     }
 
@@ -165,16 +161,6 @@ class PaymentStripe
     {
         return Payment::where('provider_payment_id', $paymentId)->first();
     }
-
-    private static function logPaymentDetails($payment, $metadata, $paymentId)
-    {
-        Log::info('Payment', [
-            'payment' => $payment,
-            'metadata' => $metadata,
-            'paymentId' => $paymentId
-        ]);
-    }
-
     private static function hasExistingEnrollment($metadata, $payment)
     {
         return Enrollment::where('user_id', $metadata->user_id)
@@ -205,11 +191,4 @@ class PaymentStripe
         $user->notify(new \App\Notifications\PurchaseConfirmationNotification($payment));
     }
 
-    private static function logError($exception)
-    {
-        Log::error('Error creating enrollments', [
-            'error' => $exception->getMessage(),
-            'trace' => $exception->getTraceAsString()
-        ]);
-    }
 } 
