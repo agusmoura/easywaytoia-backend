@@ -142,11 +142,13 @@ class PaymentUala
 
     private static function getPayment($paymentId)
     {
-        return Payment::where('provider_payment_id', $paymentId)->first();
+        return Payment::where('id', $paymentId)->first();
     }
 
     private static function logPaymentDetails($payment, $metadata, $paymentId)
     {
+
+        /* Payment {"payment":null,"metadata":{"stdClass":{"payment_id":"eaia_676ecd46501db","user_id":18,"item_type":"course","item_id":2}},"paymentId":32}  */
         Log::info('Payment', [
             'payment' => $payment,
             'metadata' => $metadata,
