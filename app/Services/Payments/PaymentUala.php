@@ -125,10 +125,6 @@ class PaymentUala
             $payment = self::getPayment($paymentId);
             $user = User::find($metadata->user_id);
 
-            if (!$payment || $payment->status === 'success') {
-                return;
-            }
-
             self::logPaymentDetails($payment, $metadata, $paymentId);
 
             if (self::hasExistingEnrollment($metadata, $payment)) {
