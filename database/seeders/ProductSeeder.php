@@ -63,7 +63,7 @@ class ProductSeeder extends Seeder
                 'is_active' => true,
                 'stripe_price_id' => 'price_1QID6pGBpK56jnVefDftrqaQ',
                 'price' => 25,
-                'related_products' => ['selia'],
+                'related_products' => ['belia'],
                 'success_page' => config('app.prod_frontend_url') . '/home'
             ],
             [
@@ -74,7 +74,7 @@ class ProductSeeder extends Seeder
                 'is_active' => true,
                 'stripe_price_id' => 'price_1QID87GBpK56jnVeLXs3sbqu',
                 'price' => 25,
-                'related_products' => ['belia'],
+                'related_products' => ['rolia'],
                 'success_page' => config('app.prod_frontend_url') . '/home'
             ]
         ];
