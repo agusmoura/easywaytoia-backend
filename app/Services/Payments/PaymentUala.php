@@ -197,8 +197,7 @@ class PaymentUala
 
     private static function getToken()
     {
-        // $url= "https://auth.developers.ar.ua.la/v2/api/auth/token";
-        $url= "https://auth.stage.developers.ar.ua.la/v2/api/auth/token";
+        $url= "https://auth.developers.ar.ua.la/v2/api/auth/token";
         $username = config('services.uala.username');
         $clientId = config('services.uala.client_id');
         $clientSecret = config('services.uala.client_secret');
@@ -248,7 +247,7 @@ class PaymentUala
             self::getToken();
         }
 
-        $url = "https://checkout.stage.developers.ar.ua.la/v2/api/checkout";
+        $url = "https://checkout.developers.ar.ua.la/v2/api/checkout";
 
         $response = Http::withoutVerifying()->withHeaders([
             'Authorization' => 'Bearer ' . self::$accessToken,
