@@ -67,13 +67,21 @@ class Payment extends Model
         $enrollments = Enrollment::where('user_id', $user->id)->get();
         Log::info('Enrollments', ['enrollments' => $enrollments]);
 
-        /* [2025-01-05 17:44:01] production.INFO: Product {"product":{"App\\Models\\Product":{"id":2,"identifier":"selia","name":"Sumergiéndose en la I.A.","description":"¿Que es la I.A? Las distintas plataformas de I.A- ChatGPT, Bing Copilot, Perplexity, Claude y POE","type":"course","is_active":true,"price":"25.00","stripe_price_id":"price_1QICn4GBpK56jnVeCcQ35fsX","related_products":null,"success_page":"https://easyway2ia.com/felicitacionSelia","created_at":"2025-01-03T00:08:41.000000Z","updated_at":"2025-01-03T00:08:41.000000Z"}}} 
-[2025-01-05 17:44:01] production.INFO: Enrollments {"enrollments":[{"id":40,"user_id":8,"product_id":2,"payment_id":53,"created_at":"2025-01-05T20:41:18.000000Z","updated_at":"2025-01-05T20:41:18.000000Z"}]} 
- */
 
         /* Verificar que el usuario no tenga el producto */
         if ($enrollments->contains('product_id', $product->id)) {
-            throw new \Exception('El usuario ya tiene este producto', 400);
+            throw new \Exception('El usuario ya tiene este producto. Por favor, elija otro producto.', 400);
+        }
+
+
+        /* si es tipo bundle, verificar que tenga los 3 productos relacionados */
+        if ($product->type === 'bundle') {
+            foreach ($product->related_products as $related_product) {
+                $related_product = Product::where('identifier', $related_product)->first();
+                if ($enrollments->contains('product_id', $related_product->id)) {
+                    throw new \Exception('El usuario ya tiene uno de los productos relacionados. Por favor, elija otro producto.', 400);
+                }
+            }
         }
 
 
