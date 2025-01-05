@@ -61,6 +61,21 @@ class Payment extends Model
             throw new \Exception('El producto no existe', 404);
         }
 
+
+
+        /* primero listar todos los productos que tiene el usuario */
+        $enrollments = Enrollment::where('user_id', $user->id)->get();
+        $enrollments = $enrollments->toArray();
+        Log::info('Enrollments', ['enrollments' => $enrollments]);
+
+        /* verificar que el producto no este en el array de enrollments */
+        if (in_array($product->id, $enrollments)) {
+            throw new \Exception('El usuario ya tiene este producto', 400);
+        }
+
+
+
+
         /** 3. OBTENER EL PAIS DEL USUARIO **/
 
         $country = strtolower(Student::where('user_id', $user->id)->first()->country ?? 'default');
