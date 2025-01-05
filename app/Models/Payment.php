@@ -100,6 +100,8 @@ class Payment extends Model
             throw new \Exception('El producto no existe', 404);
         }
 
+        Log::info('Product', ['product' => $product]);
+
         // Crear o recuperar usuario
         try {
             $user = User::registerUser($data, validatedMail: true);
@@ -107,6 +109,22 @@ class Payment extends Model
         } catch (\Exception $e) {
             throw new \Exception($e->getMessage(), 500);
         }
+
+
+        /* primero listar todos los productos que tiene el usuario */
+        $enrollments = Enrollment::where('user_id', $user->id)->get();
+        $enrollments = $enrollments->toArray();
+        Log::info('Enrollments', ['enrollments' => $enrollments]);
+
+        /* verificar que el producto no este en el array de enrollments */
+        if (in_array($product->id, $enrollments)) {
+            throw new \Exception('El usuario ya tiene este producto', 400);
+        }
+
+
+        /* verificar que si esta comprando un bundle, que este tiene 3 productos, y que los 3 productos no esten en el array de enrollments */
+
+
 
         /** 3. OBTENER EL PROVEEDOR DE PAGO **/
 
