@@ -61,7 +61,7 @@ class Payment extends Model
             throw new \Exception('El producto no existe', 404);
         }
 
-
+        Log::info('Product', ['product' => $product]);
 
         /* primero listar todos los productos que tiene el usuario */
         $enrollments = Enrollment::where('user_id', $user->id)->get();
