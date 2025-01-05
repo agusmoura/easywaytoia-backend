@@ -61,11 +61,8 @@ class Payment extends Model
             throw new \Exception('El producto no existe', 404);
         }
 
-        Log::info('Product', ['product' => $product]);
-
         /* primero listar todos los productos que tiene el usuario */
         $enrollments = Enrollment::where('user_id', $user->id)->get();
-        Log::info('Enrollments', ['enrollments' => $enrollments]);
 
 
         /* Verificar que el usuario no tenga el producto */
@@ -84,8 +81,14 @@ class Payment extends Model
             }
         }
 
-
-
+        if ($product->type === 'maximizer') {
+            foreach ($product->related_products as $related_product) {
+                $related_product = Product::where('identifier', $related_product)->first();
+                if ($enrollments->contains('product_id', $related_product->id)) {
+                    throw new \Exception('El usuario ya tiene uno de los productos relacionados. Por favor, elija otro producto.', 400);
+                }
+            }
+        }
 
         /** 3. OBTENER EL PAIS DEL USUARIO **/
 
@@ -139,19 +142,32 @@ class Payment extends Model
 
         /* primero listar todos los productos que tiene el usuario */
         $enrollments = Enrollment::where('user_id', $user->id)->get();
-        $enrollments = $enrollments->toArray();
-        Log::info('Enrollments', ['enrollments' => $enrollments]);
+    
 
-        /* verificar que el producto no este en el array de enrollments */
-        if (in_array($product->id, $enrollments)) {
-            throw new \Exception('El usuario ya tiene este producto', 400);
+        /* Verificar que el usuario no tenga el producto */
+        if ($enrollments->contains('product_id', $product->id)) {
+            throw new \Exception('El usuario ya tiene este producto. Por favor, elija otro producto.', 400);
         }
 
 
-        /* verificar que si esta comprando un bundle, que este tiene 3 productos, y que los 3 productos no esten en el array de enrollments */
+        /* si es tipo bundle, verificar que tenga los 3 productos relacionados */
+        if ($product->type === 'bundle') {
+            foreach ($product->related_products as $related_product) {
+                $related_product = Product::where('identifier', $related_product)->first();
+                if ($enrollments->contains('product_id', $related_product->id)) {
+                    throw new \Exception('El usuario ya tiene uno de los productos relacionados. Por favor, elija otro producto.', 400);
+                }
+            }
+        }
 
-
-
+        if ($product->type === 'maximizer') {
+            foreach ($product->related_products as $related_product) {
+                $related_product = Product::where('identifier', $related_product)->first();
+                if ($enrollments->contains('product_id', $related_product->id)) {
+                    throw new \Exception('El usuario ya tiene uno de los productos relacionados. Por favor, elija otro producto.', 400);
+                }
+            }
+        }
         /** 3. OBTENER EL PROVEEDOR DE PAGO **/
 
         $provider = $data['country'] === 'argentina' ? 'uala' : 'stripe';
