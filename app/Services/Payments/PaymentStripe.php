@@ -18,12 +18,6 @@ class PaymentStripe
     {
         
         Stripe::setApiKey(config('services.stripe.secret'));
-        /* retrive a stripe product */
-        $stripeProduct = \Stripe\Product::retrieve($product['stripe_price_id']);
-
-        Log::info('Stripe product', ['product' => $stripeProduct]);
-
-
 
         $payment = Payment::create([
             'user_id' => $user['id'],
