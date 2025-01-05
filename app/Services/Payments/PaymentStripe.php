@@ -16,6 +16,15 @@ class PaymentStripe
     
     public static function createPaymentLink(Product $product, $user)
     {
+
+        /* retrive a stripe product */
+        $stripeProduct = \Stripe\Product::retrieve($product['stripe_price_id']);
+
+        Log::info('Stripe product', ['product' => $stripeProduct]);
+
+
+
+
         Stripe::setApiKey(config('services.stripe.secret'));
 
         $payment = Payment::create([
