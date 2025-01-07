@@ -170,6 +170,11 @@ class Payment extends Model
         }
         /** 3. OBTENER EL PROVEEDOR DE PAGO **/
 
+        Log::info('User', ['user' => $user]);
+        Log::info('Product', ['product' => $product]);
+        Log::info('LLego hasta aca');
+
+
         $provider = $data['country'] === 'argentina' ? 'uala' : 'stripe';
         $paymentService = $provider === 'uala'
             ? new PaymentUala()

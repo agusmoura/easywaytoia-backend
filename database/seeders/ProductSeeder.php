@@ -27,7 +27,7 @@ class ProductSeeder extends Seeder
                 'description' => '¿Que es la I.A? Las distintas plataformas de I.A- ChatGPT, Bing Copilot, Perplexity, Claude y POE',
                 'type' => 'course',
                 'is_active' => true,
-                'stripe_price_id' => 'price_1QICn4GBpK56jnVeCcQ35fsX',
+                'stripe_price_id' => 'price_1QAcCb09QafnVnCAajx9jMF5',
                 'price' => 25,
                 'success_page' => config('app.prod_frontend_url') . '/felicitacionSelia'
             ],
@@ -37,7 +37,7 @@ class ProductSeeder extends Seeder
                 'description' => 'Nueve modos de generar los prompts y cómo crear un bot, 150 prompts adicionales y 100 roles para la ChatGpt',
                 'type' => 'course',
                 'is_active' => true,
-                'stripe_price_id' => 'price_1QICptGBpK56jnVe5VaRQffz',
+                'stripe_price_id' => 'price_1QAcG509QafnVnCAx7b3ACfZ',
                 'price' => 25,
                 'success_page' => config('app.prod_frontend_url') . '/felicitacionBelia'
             ],
@@ -47,7 +47,7 @@ class ProductSeeder extends Seeder
                 'description' => 'Generación de imágenes, videos y avatares, de sonido y speech, páginas web, creadoras de música y de libros, y editores de video',
                 'type' => 'course',
                 'is_active' => true,
-                'stripe_price_id' => 'price_1QICsaGBpK56jnVePi5BjRAQ',
+                'stripe_price_id' => 'price_1QAcLY09QafnVnCATKEohpex',
                 'price' => 25,
                 'success_page' => config('app.prod_frontend_url') . '/felicitacionRolia'
             ]
@@ -61,7 +61,7 @@ class ProductSeeder extends Seeder
                 'description' => 'Agregue el seminario Buceando en la I.A antes de terminar la compra.',
                 'type' => 'maximizer',
                 'is_active' => true,
-                'stripe_price_id' => 'price_1QID6pGBpK56jnVefDftrqaQ',
+                'stripe_price_id' => 'price_1QIxmQ09QafnVnCAaTs2ejPl',
                 'price' => 25,
                 'related_products' => ['belia'],
                 'success_page' => config('app.prod_frontend_url') . '/home'
@@ -72,7 +72,7 @@ class ProductSeeder extends Seeder
                 'description' => 'Agregue el seminario Una recorrida por el océano de la I.A. antes de concluir su compra.',
                 'type' => 'maximizer',
                 'is_active' => true,
-                'stripe_price_id' => 'price_1QID87GBpK56jnVeLXs3sbqu',
+                'stripe_price_id' => 'price_1QIxpG09QafnVnCAXWNyVrCI',
                 'price' => 25,
                 'related_products' => ['rolia'],
                 'success_page' => config('app.prod_frontend_url') . '/home'
@@ -87,7 +87,7 @@ class ProductSeeder extends Seeder
                 'description' => 'Con la compra de Buceando en la I.A. adquiere también Sumergiéndose en la I.A.',
                 'type' => 'bundle',
                 'is_active' => true,
-                'stripe_price_id' => 'price_1QICwUGBpK56jnVeWy58IAY1',
+                'stripe_price_id' => 'price_1QAcLY09QafnVnCATKEohpex',
                 'price' => 45,
                 'success_page' => config('app.prod_frontend_url') . '/felicitacionBundleA',
                 'related_products' => ['selia', 'belia']
@@ -98,7 +98,7 @@ class ProductSeeder extends Seeder
                 'description' => 'Adquiera los 3 seminarios, Sumergiéndose en la I.A., Buceando en la I.A y Una recorrida por el océano de la I.A. en un solo paquete a precio promocional!',
                 'type' => 'bundle',
                 'is_active' => true,
-                'stripe_price_id' => 'price_1QID02GBpK56jnVe5ZhsADnZ',
+                'stripe_price_id' => 'price_1QAcTL09QafnVnCAPr8MntpY',
                 'price' => 65,
                 'success_page' => config('app.prod_frontend_url') . '/felicitacionBundleB',
                 'related_products' => ['selia', 'belia', 'rolia']
