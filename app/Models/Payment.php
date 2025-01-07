@@ -139,6 +139,9 @@ class Payment extends Model
             throw new \Exception($e->getMessage(), 500);
         }
 
+        Log::info('User', ['user' => $user]);
+        Log::info('LLego hasta aca');
+
 
         /* primero listar todos los productos que tiene el usuario */
         $enrollments = Enrollment::where('user_id', $user->id)->get();
