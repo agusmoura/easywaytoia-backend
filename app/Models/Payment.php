@@ -140,17 +140,24 @@ class Payment extends Model
         }
 
         Log::info('User', ['user' => $user]);
+        Log::info('User', ['user' => $user->id]);
         Log::info('LLego hasta aca');
 
 
         /* primero listar todos los productos que tiene el usuario */
         $enrollments = Enrollment::where('user_id', $user->id)->get();
+
+        Log::info('Enrollments', ['enrollments' => $enrollments]);
+        Log::info('LLego hasta aca');
     
 
         /* Verificar que el usuario no tenga el producto */
         if ($enrollments->contains('product_id', $product->id)) {
             throw new \Exception('El usuario ya tiene este producto. Por favor, elija otro producto.', 400);
         }
+
+        Log::info('Enrollments', ['enrollments' => $enrollments]);
+        Log::info('LLego hasta aca');
 
 
         /* si es tipo bundle, verificar que tenga los 3 productos relacionados */
