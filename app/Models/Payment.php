@@ -142,6 +142,9 @@ class Payment extends Model
         /* primero listar todos los productos que tiene el usuario */
         $enrollments = Enrollment::where('user_id', $user['id'])->get();
 
+
+        /* Asignoar el producto gratis al usuario */
+        self::assignFreeProduct($user);
     
 
         /* Verificar que el usuario no tenga el producto */
@@ -178,5 +181,40 @@ class Payment extends Model
 
         return $paymentService->createPaymentLink($product, $user);
     }
-    
+
+    public static function assignFreeProduct($user)
+    {
+        /* si el usuario ya tiene el producto gratis, no lo asigna */
+        $enrollments = Enrollment::where('user_id', $user['id'])->get();
+        if ($enrollments->contains('product_id', 1)) {
+            return;
+        }
+
+        $lmCourse = Product::where('identifier', 'lm')->firstOrFail();
+        if ($lmCourse) {
+            // Create a free payment record
+            $payment = Payment::create([
+                'user_id' => $user['id'],
+                'payment_id' => uniqid('free_lm_'),
+                'provider' => 'system',
+                'status' => 'completed',
+                'amount' => 0,
+                'currency' => 'ARS',
+                'product_id' => $lmCourse->id,
+                'metadata' => json_encode([
+                    'payment_id' => uniqid('free_lm_'),
+                    'user_id' => $user['id'],
+                    'item_type' => 'course',
+                    'item_id' => $lmCourse->id
+                ])
+            ]);
+
+            // Create the enrollment
+            Enrollment::create([
+                'user_id' => $user['id'],
+                'product_id' => $lmCourse->id,
+                'payment_id' => $payment->id
+            ]);
+        }
+    }
 }
