@@ -129,7 +129,6 @@ class Payment extends Model
             throw new \Exception('El producto no existe', 404);
         }
 
-        Log::info('Product', ['product' => $product]);
 
         // Crear o recuperar usuario
         try {
@@ -139,25 +138,16 @@ class Payment extends Model
             throw new \Exception($e->getMessage(), 500);
         }
 
-        Log::info('User', ['user' => $user]);
-        Log::info('User ID', ['user_id' => $user['id']]);
-        Log::info('LLego hasta aca');
-
 
         /* primero listar todos los productos que tiene el usuario */
         $enrollments = Enrollment::where('user_id', $user['id'])->get();
 
-        Log::info('Enrollments', ['enrollments' => $enrollments]);
-        Log::info('LLego hasta aca');
     
 
         /* Verificar que el usuario no tenga el producto */
         if ($enrollments->contains('product_id', $product->id)) {
             throw new \Exception('El usuario ya tiene este producto. Por favor, elija otro producto.', 400);
         }
-
-        Log::info('Enrollments', ['enrollments' => $enrollments]);
-        Log::info('LLego hasta aca');
 
 
         /* si es tipo bundle, verificar que tenga los 3 productos relacionados */
@@ -179,10 +169,6 @@ class Payment extends Model
             }
         }
         /** 3. OBTENER EL PROVEEDOR DE PAGO **/
-
-        Log::info('User', ['user' => $user]);
-        Log::info('Product', ['product' => $product]);
-        Log::info('LLego hasta aca');
 
 
         $provider = $data['country'] === 'argentina' ? 'uala' : 'stripe';
