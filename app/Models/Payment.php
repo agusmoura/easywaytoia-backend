@@ -140,12 +140,12 @@ class Payment extends Model
         }
 
         Log::info('User', ['user' => $user]);
-        Log::info('User', ['user' => $user->id]);
+        Log::info('User ID', ['user_id' => $user['id']]);
         Log::info('LLego hasta aca');
 
 
         /* primero listar todos los productos que tiene el usuario */
-        $enrollments = Enrollment::where('user_id', $user->id)->get();
+        $enrollments = Enrollment::where('user_id', $user['id'])->get();
 
         Log::info('Enrollments', ['enrollments' => $enrollments]);
         Log::info('LLego hasta aca');
