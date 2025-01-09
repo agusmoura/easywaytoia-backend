@@ -87,7 +87,7 @@ class ProductSeeder extends Seeder
                 'description' => 'Con la compra de Buceando en la I.A. adquiere también Sumergiéndose en la I.A.',
                 'type' => 'bundle',
                 'is_active' => true,
-                'stripe_price_id' => 'price_1QAcLY09QafnVnCATKEohpex',
+                'stripe_price_id' => 'price_1QAcOv09QafnVnCAOA1qu0IN',
                 'price' => 45,
                 'success_page' => config('app.prod_frontend_url') . '/felicitacionBundleA',
                 'related_products' => ['selia', 'belia']
