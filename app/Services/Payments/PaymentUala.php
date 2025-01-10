@@ -14,7 +14,7 @@ class PaymentUala
     private static $accessToken;
 
     /* **************************** */
-    public static function createPaymentLink(Product $product, $user)	
+    public static function createPaymentLink(Product $product, $user, $login = false)	
     {
         try {
             $paymentId = uniqid("eaia_");
@@ -45,7 +45,20 @@ class PaymentUala
             $payment->buy_link = $order['links']['checkout_link'];
             $payment->save();
 
-            return ['payment_link' => $payment->buy_link];
+            if ($login) {
+                $token = $user->createToken('auth_token')->plainTextToken;
+                $user['token'] = $token;
+    
+                $deviceId = $user->device_id;
+            }
+    
+            $response = [
+                'payment_link' => $payment->buy_link,
+                'token' => $token,
+                'device_id' => $deviceId
+            ];
+    
+            return $response;       
         } catch (\Exception $e) {
             Log::error('Error creating payment', [
                 'error' => $e->getMessage(),

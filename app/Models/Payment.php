@@ -171,15 +171,17 @@ class Payment extends Model
                 }
             }
         }
-        /** 3. OBTENER EL PROVEEDOR DE PAGO **/
 
+
+        /** 3. OBTENER EL PROVEEDOR DE PAGO **/
 
         $provider = $data['country'] === 'argentina' ? 'uala' : 'stripe';
         $paymentService = $provider === 'uala'
             ? new PaymentUala()
             : new PaymentStripe();
 
-        return $paymentService->createPaymentLink($product, $user);
+    
+        return $paymentService->createPaymentLink($product, $user, true);
     }
 
     public static function assignFreeProduct($user)

@@ -14,7 +14,7 @@ class PaymentStripe
 
     /*----MAIN FUNCTIONS----*/
     
-    public static function createPaymentLink(Product $product, $user)
+    public static function createPaymentLink(Product $product, $user, $login = false)
     {
         
         Stripe::setApiKey(config('services.stripe.secret'));
@@ -52,7 +52,20 @@ class PaymentStripe
         $payment->buy_link = $paymentLink->url;
         $payment->save();
 
-        return ['payment_link' => $paymentLink->url];
+        if ($login) {
+            $token = $user->createToken('auth_token')->plainTextToken;
+            $user['token'] = $token;
+
+            $deviceId = $user->device_id;
+        }
+
+        $response = [
+            'payment_link' => $paymentLink->url,
+            'token' => $token,
+            'device_id' => $deviceId
+        ];
+
+        return $response;
     }
 
     public static function handleWebhook($payload, $sigHeader, $endpointSecret)
