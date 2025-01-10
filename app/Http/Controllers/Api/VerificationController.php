@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Illuminate\Auth\Events\Verified;
 use Illuminate\Support\Facades\URL;
+use Tymon\JWTAuth\Facades\JWTAuth;
 use App\Models\User;
 use App\Models\Product;
 use App\Models\Payment;
@@ -88,6 +89,22 @@ class VerificationController extends Controller
             }
         }
 
+        // Si en la request viene "login" en true, retornamos token y device_id
+        if ($request->boolean('login')) {
+            $token = JWTAuth::fromUser($user);
+            $deviceId = uniqid('dev_', true);
+
+            // Importante: Para que el dispositivo quede registrado
+            User::handleUserDevice($user, $deviceId, $token);
+
+            return response()->json([
+                'token'     => $token,
+                'device_id' => $deviceId,
+                'type'      => 'Bearer'
+            ], 200);
+        }
+
+        // Si no se quiere login inmediato, rediriges
         return redirect(config('app.prod_frontend_url') . '/login?verification=success');
     }
 } 

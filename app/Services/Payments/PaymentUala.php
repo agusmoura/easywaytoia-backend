@@ -8,6 +8,7 @@ use App\Models\Payment;
 use App\Models\Enrollment;
 use App\Models\Product;
 use App\Models\User;
+use Tymon\JWTAuth\Facades\JWTAuth;
 
 class PaymentUala
 {
@@ -45,20 +46,24 @@ class PaymentUala
             $payment->buy_link = $order['links']['checkout_link'];
             $payment->save();
 
+            // NUEVO: login con JWT si $login == true
+            $token = null;
+            $deviceId = null;
+
             if ($login) {
-                $token = $user->createToken('auth_token')->plainTextToken;
-                $user['token'] = $token;
-    
-                $deviceId = $user->device_id;
+                // Generar token
+                $token = JWTAuth::fromUser($user);
+
+                // Registrar/actualizar dispositivo
+                $deviceId = uniqid('dev_', true);
+                User::handleUserDevice($user, $deviceId, $token);
             }
-    
-            $response = [
+
+            return [
                 'payment_link' => $payment->buy_link,
                 'token' => $token,
                 'device_id' => $deviceId
             ];
-    
-            return $response;       
         } catch (\Exception $e) {
             Log::error('Error creating payment', [
                 'error' => $e->getMessage(),

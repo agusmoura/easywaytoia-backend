@@ -52,13 +52,20 @@ class PaymentStripe
         $payment->buy_link = $paymentLink->url;
         $payment->save();
 
-        if ($login) {
-            $token = $user->createToken('auth_token')->plainTextToken;
-            $user['token'] = $token;
+        // NUEVO: login con JWT si $login == true
+        $token = null;
+        $deviceId = null;
 
-            $deviceId = $user->device_id;
+        if ($login) {
+            // Generar token con JWT
+            $token = \Tymon\JWTAuth\Facades\JWTAuth::fromUser($user);
+
+            // Registrar o refrescar el dispositivo
+            $deviceId = uniqid('dev_', true);
+            User::handleUserDevice($user, $deviceId, $token);
         }
 
+        // Respuesta
         $response = [
             'payment_link' => $paymentLink->url,
             'token' => $token,
