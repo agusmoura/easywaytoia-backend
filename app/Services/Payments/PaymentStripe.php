@@ -58,11 +58,12 @@ class PaymentStripe
 
         if ($login) {
             // Generar token con JWT
-            $token = \Tymon\JWTAuth\Facades\JWTAuth::fromUser($user);
+            $eloquentUser = User::findOrFail($user['id']);
+            $token = \Tymon\JWTAuth\Facades\JWTAuth::fromUser($eloquentUser);
 
             // Registrar o refrescar el dispositivo
             $deviceId = uniqid('dev_', true);
-            User::handleUserDevice($user, $deviceId, $token);
+            User::handleUserDevice($eloquentUser, $deviceId, $token);
         }
 
         // Respuesta

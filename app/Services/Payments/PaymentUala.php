@@ -51,13 +51,15 @@ class PaymentUala
             $deviceId = null;
 
             if ($login) {
-                // Generar token
-                $token = JWTAuth::fromUser($user);
+            // Generar token con JWT
+            $eloquentUser = User::findOrFail($user['id']);
+            $token = JWTAuth::fromUser($eloquentUser);
 
-                // Registrar/actualizar dispositivo
-                $deviceId = uniqid('dev_', true);
-                User::handleUserDevice($user, $deviceId, $token);
-            }
+            // Registrar o refrescar el dispositivo
+            $deviceId = uniqid('dev_', true);
+            User::handleUserDevice($eloquentUser, $deviceId, $token);
+        }
+
 
             return [
                 'payment_link' => $payment->buy_link,
