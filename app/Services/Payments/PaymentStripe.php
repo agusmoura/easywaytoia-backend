@@ -14,7 +14,7 @@ class PaymentStripe
 
     /*----MAIN FUNCTIONS----*/
     
-    public static function createPaymentLink(Product $product, $user, $login = false)
+    public static function createPaymentLink(Product $product, $user)
     {
         
         Stripe::setApiKey(config('services.stripe.secret'));
@@ -52,28 +52,7 @@ class PaymentStripe
         $payment->buy_link = $paymentLink->url;
         $payment->save();
 
-        // NUEVO: login con JWT si $login == true
-        $token = null;
-        $deviceId = null;
-
-        if ($login) {
-            // Generar token con JWT
-            $eloquentUser = User::findOrFail($user['id']);
-            $token = \Tymon\JWTAuth\Facades\JWTAuth::fromUser($eloquentUser);
-
-            // Registrar o refrescar el dispositivo
-            $deviceId = uniqid('dev_', true);
-            User::handleUserDevice($eloquentUser, $deviceId, $token);
-        }
-
-        // Respuesta
-        $response = [
-            'payment_link' => $paymentLink->url,
-            'token' => $token,
-            'device_id' => $deviceId
-        ];
-
-        return $response;
+        return ['payment_link' => $paymentLink->url];
     }
 
     public static function handleWebhook($payload, $sigHeader, $endpointSecret)
